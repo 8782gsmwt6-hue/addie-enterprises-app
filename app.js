@@ -1,68 +1,92 @@
+const $=id=>document.getElementById(id), num=v=>Number(String(v||"").replace(/[^0-9.-]/g,""))||0;
+const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
+const brands=["Louis Vuitton","Chanel","Gucci","Hermès","Prada","Bottega Veneta","Burberry","Saint Laurent","Fendi","Dior","Celine","Loewe","Balenciaga","Givenchy","Valentino","Ferragamo","Coach","Tory Burch","MCM","Goyard","Cartier","Versace","Mulberry","Chloé","Other / Enter manually"];
+$("brand").innerHTML=brands.map(x=>`<option>${x}</option>`).join("");
+$("brand").onchange=()=>$("customWrap").classList.toggle("hidden",$("brand").value!=="Other / Enter manually");
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
+const field=id=>$(id).value.trim()||"Not provided";
+function makePrompt(){
+const margin=num($("margin").value)||25, brand=$("brand").value==="Other / Enter manually"?field("customBrand"):$("brand").value;
+const p=`Act as a cautious luxury resale pricing analyst and experienced luxury consignment buyer. Use current web research.
 
-const STORAGE_KEY="addieEnterprisesDataV3",OLD_KEY2="addieEnterprisesDataV2",OLD_KEY1="addieEnterprisesDataV1";let state=loadState();
-function blankState(){return{dark:false,items:[],expenses:[],pricingReports:[]}}function loadState(){for(const k of[STORAGE_KEY,OLD_KEY2,OLD_KEY1]){try{const r=localStorage.getItem(k);if(r){const s=Object.assign(blankState(),JSON.parse(r));localStorage.setItem(STORAGE_KEY,JSON.stringify(s));return s}}catch(e){}}return blankState()}function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
-function money(n){return Number(n||0).toLocaleString("en-US",{style:"currency",currency:"USD"})}
-function num(id){return Number(document.getElementById(id).value||0)}
-function val(id){return document.getElementById(id).value}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-function escapeHtml(s){
-  return String(s??"").replace(/[&<>"']/g,function(m){
-    if(m==="&") return "&amp;";
-    if(m==="<") return "&lt;";
-    if(m===">") return "&gt;";
-    if(m==='"') return "&quot;";
-    return "&#039;";
-  });
-}
-function calc(i){const invested=Number(i.purchasePrice||0)+Number(i.authCost||0)+Number(i.repairCost||0),selling=Number(i.sellingPrice||0),net=selling-Number(i.outboundShipping||0),profit=i.status==="sold"?net-invested:0,margin=i.status==="sold"&&selling>0?profit/selling*100:0,roi=invested>0?profit/invested*100:0;return{invested,selling,net,profit,margin,roi}}
-function collectForm(){return{id:val("itemId")||uid(),brand:val("brand").trim(),model:val("model").trim(),category:val("category"),condition:val("condition"),purchaseDate:val("purchaseDate"),purchasePrice:num("purchasePrice"),purchaseSource:val("purchaseSource").trim(),authCost:num("authCost"),repairCost:num("repairCost"),sellingPrice:num("sellingPrice"),status:val("status"),platform:val("platform").trim(),saleDate:val("saleDate"),outboundShipping:num("outboundShipping"),notes:val("notes").trim(),updatedAt:new Date().toISOString()}}
-function updateCalcPreview(){const c=calc(collectForm());for(const[k,v]of Object.entries({calcInvested:money(c.invested),calcNet:money(c.net),calcProfit:money(c.profit),calcMargin:`${c.margin.toFixed(1)}%`}))document.getElementById(k).textContent=v}
-function resetForm(){document.getElementById("itemForm").reset();document.getElementById("itemId").value="";document.getElementById("formTitle").textContent="Add an item";document.getElementById("cancelEditBtn").classList.add("hidden");updateCalcPreview()}
-function saveItem(e){e.preventDefault();const i=collectForm(),x=state.items.findIndex(a=>a.id===i.id);x>=0?state.items[x]=i:state.items.unshift(i);saveState();resetForm();renderAll();showScreen("inventoryScreen","Inventory")}
-function editItem(id){const i=state.items.find(x=>x.id===id);if(!i)return;Object.entries(i).forEach(([k,v])=>{const e=document.getElementById(k);if(e)e.value=v??""});document.getElementById("formTitle").textContent="Edit item";document.getElementById("cancelEditBtn").classList.remove("hidden");updateCalcPreview();showScreen("addScreen","Edit item")}
-function itemCard(i){const c=calc(i),d=document.createElement("article");d.className="item-card card";d.innerHTML=`<div><span class="badge ${i.status==="sold"?"sold":""}">${i.status==="sold"?"Sold":"In inventory"}</span><h3>${escapeHtml(i.brand)} ${escapeHtml(i.model)}</h3><div class="item-meta">Total cost: ${money(c.invested)}${i.sellingPrice?` • Selling price: ${money(i.sellingPrice)}`:""}<br>${i.status==="sold"?`Profit: ${money(c.profit)} • Margin: ${c.margin.toFixed(1)}%`:"Active inventory"}</div></div><div class="item-actions"><button class="small-btn edit">Edit</button><button class="small-btn pricing">Price</button><button class="small-btn delete">Delete</button></div>`;d.querySelector(".edit").onclick=()=>editItem(i.id);d.querySelector(".pricing").onclick=()=>prefillPricing(i);d.querySelector(".delete").onclick=()=>{if(confirm("Delete item?")){state.items=state.items.filter(x=>x.id!==i.id);saveState();renderAll()}};return d}
-function renderInventory(){const q=val("searchInput").toLowerCase(),s=val("statusFilter"),l=document.getElementById("inventoryList");l.innerHTML="";const rows=state.items.filter(i=>(s==="all"||i.status===s)&&[i.brand,i.model,i.platform].join(" ").toLowerCase().includes(q));if(!rows.length)l.innerHTML='<div class="card empty">No matching items.</div>';rows.forEach(i=>l.appendChild(itemCard(i)))}
-function resetExpenseForm(){document.getElementById("expenseForm").reset();document.getElementById("expenseId").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("cancelExpenseEditBtn").classList.add("hidden")}
-function saveExpense(e){e.preventDefault();const x={id:val("expenseId")||uid(),date:val("expenseDate"),category:val("expenseCategory"),vendor:val("expenseVendor"),amount:num("expenseAmount"),description:val("expenseDescription")},i=state.expenses.findIndex(a=>a.id===x.id);i>=0?state.expenses[i]=x:state.expenses.unshift(x);saveState();resetExpenseForm();renderExpenses();renderDashboard()}
-function renderExpenses(){const f=val("expenseCategoryFilter"),l=document.getElementById("expenseList");l.innerHTML="";document.getElementById("expenseTotal").textContent=money(state.expenses.reduce((s,e)=>s+Number(e.amount||0),0));const rows=state.expenses.filter(e=>f==="all"||e.category===f);if(!rows.length)l.innerHTML='<div class="card empty">No shop expenses.</div>';rows.forEach(e=>{const d=document.createElement("article");d.className="expense-card card";d.innerHTML=`<div><span class="badge">${escapeHtml(e.category)}</span><h3>${money(e.amount)}</h3><div class="item-meta">${escapeHtml(e.vendor)} • ${escapeHtml(e.date)}<br>${escapeHtml(e.description)}</div></div><div class="item-actions"><button class="small-btn delete">Delete</button></div>`;d.querySelector(".delete").onclick=()=>{state.expenses=state.expenses.filter(x=>x.id!==e.id);saveState();renderExpenses();renderDashboard()};l.appendChild(d)})}
-function renderDashboard(){const a=state.items.filter(i=>i.status==="inventory"),s=state.items.filter(i=>i.status==="sold"),inv=a.reduce((x,i)=>x+calc(i).invested,0),rev=s.reduce((x,i)=>x+Number(i.sellingPrice||0),0),itemProfit=s.reduce((x,i)=>x+calc(i).profit,0),exp=state.expenses.reduce((x,e)=>x+Number(e.amount||0),0);document.getElementById("statActive").textContent=a.length;document.getElementById("statInvested").textContent=money(inv);document.getElementById("statRevenue").textContent=money(rev);document.getElementById("statProfit").textContent=money(itemProfit-exp);document.getElementById("snapSold").textContent=s.length;document.getElementById("snapExpenses").textContent=money(exp);document.getElementById("snapAvgProfit").textContent=money(s.length?itemProfit/s.length:0);document.getElementById("snapMargin").textContent=`${(s.length?s.reduce((x,i)=>x+calc(i).margin,0)/s.length:0).toFixed(1)}%`;const r=document.getElementById("recentItems");r.innerHTML=state.items.length?"":'<div class="empty">Add the first item.</div>';state.items.slice(0,5).forEach(i=>{const d=document.createElement("div");d.className="recent-row";d.innerHTML=`<strong>${escapeHtml(i.brand)} ${escapeHtml(i.model)}</strong><strong>${money(calc(i).invested)}</strong>`;r.appendChild(d)})}
-function selectedBrand(){return val("pricingBrandSelect")==="Other / Manual entry"?val("pricingBrandManual").trim():val("pricingBrandSelect")}
-function accessories(){return[...document.querySelectorAll(".accessory:checked")].map(x=>x.value)}
-function updatePricingTargets(){const offer=num("pricingOffer"),profit=num("pricingMinProfit"),ship=num("pricingShipping"),roi=num("pricingTargetRoi")/100;document.getElementById("offerReview").textContent=money(offer);document.getElementById("minimumSale").textContent=money(Math.max(offer+profit+ship,offer*(1+roi)+ship))}
-function buildPrompt(){updatePricingTargets();const schema=`{"recommended_max_purchase":0,"recommended_listing_price":0,"expected_sale_price":0,"expected_profit_at_offer":0,"deal_score":0,"recommendation":"BUY|CONSIDER|PASS","demand_score":0,"estimated_days_to_sell":0,"market_low":0,"market_high":0,"confidence":0,"summary":"","risks":[],"comparable_sales":[{"platform":"","sold_price":0,"date":"","notes":""}]}`;document.getElementById("pricingPrompt").value=`Act as a cautious luxury-handbag resale analyst. Search the current web and prioritize recent completed/sold listings over active asking prices.
+PRIMARY OBJECTIVE
+Determine the maximum purchase price that should be paid today to have a realistic chance of earning at least a ${margin}% profit on the all-in purchase cost after marketplace fees, payment costs, seller-paid shipping, and other selling costs.
+
+Do not merely estimate resale value. Give a clear recommended purchase-price ceiling and a BUY / NEGOTIATE / PASS decision.
 
 ITEM
-Brand: ${selectedBrand()||"Not provided"}
-Model/style: ${val("pricingModel")||"Not provided"}
-Size: ${val("pricingSize")||"Not provided"}
-Color: ${val("pricingColor")||"Not provided"}
-Material: ${val("pricingMaterial")||"Not provided"}
-Hardware: ${val("pricingHardware")||"Not provided"}
-Approximate year: ${val("pricingYear")||"Unknown"}
-Condition: ${val("pricingCondition")}
-Accessories: ${accessories().join(", ")||"None listed"}
-Condition details: ${val("pricingNotes")||"None provided"}
-Current purchase price offered: ${money(num("pricingOffer"))}
-Target minimum profit: ${money(num("pricingMinProfit"))}
-Target ROI: ${num("pricingTargetRoi")}%
-Expected shipping cost: ${money(num("pricingShipping"))}
-Likely selling platform: ${val("pricingPlatform")||"Not selected"}
+- Brand: ${brand}
+- Model/item: ${field("model")}
+- Style/category: ${field("style")}
+- Color: ${field("color")}
+- Material: ${field("material")}
+- Size: ${field("size")}
+- Condition: ${field("condition")}
+- Condition details/flaws: ${field("details")}
+- Accessories included: ${field("accessories")}
+- Authentication status: ${field("authentication")}
+- Purchase platform/source: ${field("source")}
+- Current asking price or bid: ${$("knownPrice").value?money(num($("knownPrice").value)):"Not provided"}
+- Likely selling platform: ${field("platform")}
+- Seller-paid shipping estimate: ${money(num($("shipping").value))}
+- Target profit margin on all-in purchase cost: ${margin}%
 
-TASK
-1. Identify the closest possible recent sold comparables.
-2. Recommend the maximum purchase price that still leaves a sensible margin.
-3. Recommend the listing price and realistic accepted-offer selling price.
-4. Estimate profit at the current offered purchase price.
-5. Give a 0–100 Deal Score and BUY, CONSIDER, or PASS.
-6. Estimate demand and time-to-sale.
-7. Flag authenticity, condition, missing-accessory, seasonality, or saturation risks.
-8. Do not invent sold-listing data. Clearly label weak comps and estimates.
-9. After the written analysis, return a valid JSON object only, using exactly this schema:
-${schema}`;}
-async function copyPrompt(){if(!val("pricingPrompt"))buildPrompt();try{await navigator.clipboard.writeText(val("pricingPrompt"));alert("Copied.")}catch(e){document.getElementById("pricingPrompt").select();document.execCommand("copy")}}
-function importAi(){let t=val("aiJsonInput").trim();const a=t.indexOf("{"),b=t.lastIndexOf("}");if(a>=0&&b>a)t=t.slice(a,b+1);try{const r=JSON.parse(t);state.pricingReports.unshift({...r,id:uid(),createdAt:new Date().toISOString(),brand:selectedBrand(),model:val("pricingModel")});saveState();renderAiReport(r)}catch(e){alert("Could not read that JSON. Paste the JSON object returned by ChatGPT.")}}
-function renderAiReport(r){const box=document.getElementById("aiReport");box.classList.remove("hidden");const rec=String(r.recommendation||"").toUpperCase();box.innerHTML=`<div class="report-grid"><div class="report-card"><span>Maximum purchase</span><strong>${money(r.recommended_max_purchase)}</strong></div><div class="report-card"><span>Listing price</span><strong>${money(r.recommended_listing_price)}</strong></div><div class="report-card"><span>Expected sale</span><strong>${money(r.expected_sale_price)}</strong></div><div class="report-card"><span>Expected profit</span><strong>${money(r.expected_profit_at_offer)}</strong></div><div class="report-card"><span>Deal score</span><strong class="deal-score">${Number(r.deal_score||0)}/100</strong></div><div class="report-card"><span>Time to sell</span><strong>${Number(r.estimated_days_to_sell||0)} days</strong></div></div><div class="report-callout"><h3 class="${rec==="PASS"?"pass":"buy"}">${escapeHtml(rec||"ANALYSIS")}</h3><p>${escapeHtml(r.summary||"")}</p><p><strong>Market range:</strong> ${money(r.market_low)}–${money(r.market_high)}</p><p><strong>Confidence:</strong> ${Number(r.confidence||0)}%</p></div>`}
-function prefillPricing(i){document.getElementById("pricingBrandSelect").value=[...document.getElementById("pricingBrandSelect").options].some(o=>o.value===i.brand)?i.brand:"Other / Manual entry";document.getElementById("pricingBrandManual").value=i.brand;document.getElementById("manualBrandWrap").classList.toggle("hidden",val("pricingBrandSelect")!=="Other / Manual entry");document.getElementById("pricingModel").value=i.model||"";document.getElementById("pricingCondition").value=i.condition||"Very Good";document.getElementById("pricingOffer").value=calc(i).invested||"";document.getElementById("pricingNotes").value=i.notes||"";showScreen("pricingScreen","Pricing");updatePricingTargets()}
-function dl(name,text,type){const b=new Blob([text],{type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}function exportBackup(){dl("addie-enterprises-backup.json",JSON.stringify(state,null,2),"application/json")}function importBackup(f){const r=new FileReader();r.onload=()=>{try{state=Object.assign(blankState(),JSON.parse(r.result));saveState();location.reload()}catch(e){alert("Invalid backup")}};r.readAsText(f)}
-function showScreen(id,title){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll(".bottom-nav button").forEach(b=>b.classList.toggle("active",b.dataset.screen===id));document.getElementById("screenTitle").textContent=title;if(id==="dashboardScreen")renderDashboard();if(id==="inventoryScreen")renderInventory();if(id==="expensesScreen")renderExpenses();window.scrollTo(0,0)}function renderAll(){renderDashboard();renderInventory();renderExpenses()}
-function init(){document.body.classList.toggle("dark",state.dark);document.querySelectorAll(".bottom-nav button").forEach(b=>b.onclick=()=>showScreen(b.dataset.screen,b.textContent.trim().replace(/[⌂▦＋＄✦⚙]/g,"")));document.getElementById("themeBtn").onclick=()=>{state.dark=!state.dark;saveState();document.body.classList.toggle("dark",state.dark)};document.getElementById("itemForm").onsubmit=saveItem;document.getElementById("cancelEditBtn").onclick=resetForm;document.getElementById("searchInput").oninput=renderInventory;document.getElementById("statusFilter").onchange=renderInventory;document.querySelectorAll("#itemForm input,#itemForm select").forEach(e=>e.oninput=updateCalcPreview);document.getElementById("expenseForm").onsubmit=saveExpense;document.getElementById("cancelExpenseEditBtn").onclick=resetExpenseForm;[...document.getElementById("expenseCategory").options].forEach(o=>document.getElementById("expenseCategoryFilter").appendChild(new Option(o.text,o.value)));document.getElementById("expenseCategoryFilter").onchange=renderExpenses;document.getElementById("pricingBrandSelect").onchange=()=>document.getElementById("manualBrandWrap").classList.toggle("hidden",val("pricingBrandSelect")!=="Other / Manual entry");["pricingOffer","pricingMinProfit","pricingShipping","pricingTargetRoi"].forEach(id=>document.getElementById(id).oninput=updatePricingTargets);document.getElementById("buildPromptBtn").onclick=buildPrompt;document.getElementById("copyPromptBtn").onclick=copyPrompt;document.getElementById("openChatGPTBtn").onclick=()=>window.open("https://chatgpt.com/","_blank");document.getElementById("importAiBtn").onclick=importAi;document.getElementById("exportBackupBtn").onclick=exportBackup;document.getElementById("importBackupInput").onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);document.getElementById("exportCsvBtn").onclick=()=>alert("Inventory CSV export remains available in the prior version and can be added back next.");document.getElementById("exportExpensesCsvBtn").onclick=()=>alert("Expense CSV export remains available in the prior version and can be added back next.");document.getElementById("resetBtn").onclick=()=>{if(confirm("Erase all data?")){[STORAGE_KEY,OLD_KEY2,OLD_KEY1].forEach(k=>localStorage.removeItem(k));location.reload()}};resetForm();resetExpenseForm();renderAll();updatePricingTargets();if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js").catch(()=>{})}init();
+RESEARCH RULES
+1. Prioritize recent completed/sold listings over active asking prices.
+2. Find the closest matches by model, size, material, color, condition, accessories, and authentication status.
+3. Cite each usable comparable with platform, date, sold price, condition, and source link when available.
+4. Never invent sold listings, prices, dates, fees, links, or sell-through data.
+5. Clearly separate sold evidence from active asking prices.
+6. Exclude or down-weight obvious outliers and materially different items.
+7. If exact sold evidence is thin, say so and lower the confidence rating.
+8. Use the selling platform's current fee structure and explain all assumptions.
+9. Distinguish profit margin from ROI.
+
+CALCULATIONS
+For low, realistic, and optimistic sale scenarios, calculate:
+- Expected accepted sale price
+- Platform/payment fees
+- Shipping and other selling costs
+- Net sale proceeds
+- Maximum all-in purchase price that preserves a ${margin}% profit
+
+Use:
+Maximum purchase price = net sale proceeds ÷ (1 + target profit margin)
+
+Also show:
+Dollar profit = net sale proceeds − all-in purchase price
+ROI = dollar profit ÷ all-in purchase price × 100
+
+REQUIRED OUTPUT
+A. A concise table of the best recent sold comparables, with active listings shown separately.
+B. Low, realistic, and optimistic resale outcomes; recommended listing price; expected accepted offer; lowest reasonable offer; likely time to sale; demand; liquidity; and pricing confidence.
+C. A scenario table showing sale price, fees, shipping, net proceeds, maximum purchase price, dollar profit, and ROI.
+D. Decision:
+🟢 BUY — realistic case comfortably meets the target at the current price.
+🟡 NEGOTIATE — works only below a specific price or relies too much on the optimistic case.
+🔴 PASS — current price is too high, evidence is too weak, or realistic economics miss the target.
+E. End with:
+- Recommended maximum purchase price: $___
+- Stretch maximum purchase price: $___
+- Current-price decision: BUY / NEGOTIATE / PASS / NOT PROVIDED
+- “If I were buying this item today, I would pay no more than $___.”
+
+Be cautious. Base the recommended maximum on the realistic case, not the optimistic case.`;
+$("prompt").value=p;return p}
+$("build").onclick=makePrompt;
+async function copyPrompt(){const p=makePrompt();try{await navigator.clipboard.writeText(p)}catch{$("prompt").select();document.execCommand("copy")}return p}
+$("copy").onclick=async()=>{$("status").textContent="Prompt copied.";await copyPrompt()};
+$("open").onclick=async()=>{await copyPrompt();$("status").textContent="Prompt copied. Opening ChatGPT — paste it into a new chat.";setTimeout(()=>location.href="https://chatgpt.com/",250)};
+function ceiling(){const sale=num($("expectedSale").value),fee=num($("fee").value)/100,ship=num($("shipping").value),m=num($("margin").value)/100;if(!sale){$("result").textContent="Enter an expected sale price.";return}const net=sale-sale*fee-ship,max=net/(1+m),profit=net-max;$("result").innerHTML=`Net proceeds: <b>${money(net)}</b><br>Preliminary maximum purchase price: <b>${money(max)}</b><br>Profit at that price: <b>${money(profit)}</b><br><small>Confirm with sold-market research.</small>`}
+["expectedSale","fee","shipping","margin"].forEach(id=>$(id).oninput=ceiling);
+let db=JSON.parse(localStorage.getItem("addie_v2")||'{"items":[],"expenses":[]}');function save(){localStorage.setItem("addie_v2",JSON.stringify(db));render()}
+$("saveItem").onclick=()=>{db.items.unshift({id:crypto.randomUUID(),name:field("itemName"),brand:field("itemBrand"),purchaseDate:$("purchaseDate").value,purchase:num($("purchasePrice").value),saleDate:$("saleDate").value,sale:num($("sellingPrice").value),platform:$("salePlatform").value,notes:$("notes").value.trim()});save()};
+$("saveExpense").onclick=()=>{const amount=num($("expenseAmount").value);if(!amount)return alert("Enter an amount.");db.expenses.unshift({id:crypto.randomUUID(),date:$("expenseDate").value,category:$("expenseCategory").value,amount,description:$("expenseDescription").value.trim()});save()};
+window.delItem=id=>{db.items=db.items.filter(x=>x.id!==id);save()};window.delExpense=id=>{db.expenses=db.expenses.filter(x=>x.id!==id);save()};
+function render(){
+$("itemList").innerHTML=db.items.length?db.items.map(x=>`<div class="item"><div class="head"><span>${x.brand} — ${x.name}</span><button class="delete" onclick="delItem('${x.id}')">Delete</button></div><div class="meta">Bought ${x.purchaseDate||"—"} for ${money(x.purchase)}${x.sale?` · Sold for ${money(x.sale)} on ${x.platform}<br>Gross profit: ${money(x.sale-x.purchase)} · ROI: ${x.purchase?((x.sale-x.purchase)/x.purchase*100).toFixed(1):"0.0"}%`:" · Unsold"}${x.notes?`<br>${x.notes}`:""}</div></div>`).join(""):'<p class="helper">No items saved.</p>';
+$("expenseList").innerHTML=db.expenses.length?db.expenses.map(x=>`<div class="item"><div class="head"><span>${x.category}</span><button class="delete" onclick="delExpense('${x.id}')">Delete</button></div><div class="meta">${x.date||"—"} · ${money(x.amount)}${x.description?` · ${x.description}`:""}</div></div>`).join(""):'<p class="helper">No expenses saved.</p>';
+const invested=db.items.reduce((a,x)=>a+x.purchase,0),sales=db.items.reduce((a,x)=>a+x.sale,0),profit=sales-invested,expenses=db.expenses.reduce((a,x)=>a+x.amount,0);
+$("sItems").textContent=db.items.length;$("sInvested").textContent=money(invested);$("sSales").textContent=money(sales);$("sProfit").textContent=money(profit);$("sExpenses").textContent=money(expenses);$("sNet").textContent=money(profit-expenses)}
+$("export").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));a.download="addie-enterprises-backup.json";a.click()};
+const today=new Date().toISOString().slice(0,10);$("purchaseDate").value=today;$("expenseDate").value=today;makePrompt();render();
