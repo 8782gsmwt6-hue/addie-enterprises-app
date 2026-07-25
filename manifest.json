@@ -1,7 +1,7 @@
 {
   "name": "Addie Enterprises",
   "short_name": "Addie",
-  "description": "Inventory, expenses, sales, profit, and pricing assistant",
+  "description": "Luxury resale inventory and AI pricing assistant",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f7f3f7",

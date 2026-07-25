@@ -1,7 +1,13 @@
-# Addie Enterprises App v2
+# Addie Enterprises v3 — AI Buy & Sell Advisor
 
-Changes: Purchase price (all in), removed inbound shipping/other costs/platform fees, selling price field, Shop Expenses tab, and secure ChatGPT pricing-request tab. Existing v1 data is migrated when possible. Do not place an OpenAI API key in public GitHub Pages code.
+This version adds:
+- Luxury brand dropdown with manual brand entry
+- Detailed bag attributes and accessories
+- AI market-analysis request generator
+- Recommended maximum purchase price
+- Recommended listing and expected selling price
+- Expected profit, Deal Score, BUY/CONSIDER/PASS
+- Structured JSON import from ChatGPT into polished app cards
+- Data migration from prior versions
 
-## Hotfix
-- Repairs JavaScript CSV-export syntax error that prevented navigation tabs from working.
-- Updates offline cache to v3 so devices receive the corrected files.
+Security note: GitHub Pages cannot safely store an OpenAI API key. This package uses a secure ChatGPT handoff and imports structured results without exposing credentials.

@@ -1,10 +1,189 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5a2a52"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Addie Enterprises"><link rel="apple-touch-icon" href="icon-180.png"><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css"><title>Addie Enterprises</title></head><body>
-<header class="app-header"><div><div class="eyebrow">ADDIE ENTERPRISES</div><h1 id="screenTitle">Dashboard</h1></div><button id="themeBtn" class="icon-btn">◐</button></header>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5a2a52">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Addie Enterprises">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
+<title>Addie Enterprises</title>
+</head>
+<body>
+<header class="app-header">
+  <div>
+    <div class="eyebrow">ADDIE ENTERPRISES</div>
+    <h1 id="screenTitle">Dashboard</h1>
+  </div>
+  <button id="themeBtn" class="icon-btn" aria-label="Toggle dark mode">◐</button>
+</header>
+
 <main>
-<section id="dashboardScreen" class="screen active"><div class="stats-grid"><div class="stat card"><span>Active inventory</span><strong id="statActive">0</strong></div><div class="stat card"><span>Inventory invested</span><strong id="statInvested">$0</strong></div><div class="stat card"><span>Sales revenue</span><strong id="statRevenue">$0</strong></div><div class="stat card"><span>Net business profit</span><strong id="statProfit">$0</strong></div></div><div class="card"><h3>Business snapshot</h3><div class="snapshot-grid"><div><span>Sold items</span><strong id="snapSold">0</strong></div><div><span>Shop expenses</span><strong id="snapExpenses">$0</strong></div><div><span>Average item profit</span><strong id="snapAvgProfit">$0</strong></div><div><span>Average margin</span><strong id="snapMargin">0%</strong></div></div></div><div class="card"><h3>Recent items</h3><div id="recentItems"></div></div></section>
-<section id="inventoryScreen" class="screen"><div class="card filters"><input id="searchInput" type="search" placeholder="Search brand, item, platform..."><select id="statusFilter"><option value="all">All items</option><option value="inventory">In inventory</option><option value="sold">Sold</option></select></div><div id="inventoryList"></div></section>
-<section id="addScreen" class="screen"><form id="itemForm" class="card"><h3 id="formTitle">Add an item</h3><input type="hidden" id="itemId"><div class="form-grid"><label>Brand<input id="brand" required></label><label>Model / item<input id="model" required></label><label>Category<select id="category"><option>Handbag</option><option>Travel bag</option><option>Wallet</option><option>Accessory</option><option>Other</option></select></label><label>Condition<select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option></select></label><label>Purchase date<input id="purchaseDate" type="date"></label><label>Purchase price (all in)<input id="purchasePrice" type="number" step="0.01" inputmode="decimal"></label><label>Purchase source<input id="purchaseSource"></label><label>Authentication cost<input id="authCost" type="number" step="0.01" inputmode="decimal"></label><label>Repair / cleaning<input id="repairCost" type="number" step="0.01" inputmode="decimal"></label><label>Selling price<input id="sellingPrice" type="number" step="0.01" inputmode="decimal"></label><label>Status<select id="status"><option value="inventory">In inventory</option><option value="sold">Sold</option></select></label><label>Selling platform<input id="platform"></label><label>Sale date<input id="saleDate" type="date"></label><label>Outbound shipping<input id="outboundShipping" type="number" step="0.01" inputmode="decimal"></label></div><label>Notes<textarea id="notes" rows="3"></textarea></label><div class="calculation-box"><div><span>Total item cost</span><strong id="calcInvested">$0.00</strong></div><div><span>Net proceeds</span><strong id="calcNet">$0.00</strong></div><div><span>Profit</span><strong id="calcProfit">$0.00</strong></div><div><span>Margin</span><strong id="calcMargin">0%</strong></div></div><button class="primary wide" type="submit">Save item</button><button class="secondary wide hidden" type="button" id="cancelEditBtn">Cancel edit</button></form></section>
-<section id="expensesScreen" class="screen"><form id="expenseForm" class="card"><h3 id="expenseFormTitle">Add shop expense</h3><input type="hidden" id="expenseId"><div class="form-grid"><label>Date<input id="expenseDate" type="date" required></label><label>Category<select id="expenseCategory"><option>Supplies</option><option>Packaging</option><option>Shipping materials</option><option>Authentication</option><option>Cleaning / repair tools</option><option>Advertising</option><option>Software / subscriptions</option><option>Travel / mileage</option><option>Professional services</option><option>Other</option></select></label><label>Vendor<input id="expenseVendor"></label><label>Amount<input id="expenseAmount" type="number" step="0.01" inputmode="decimal" required></label></div><label>Description<textarea id="expenseDescription" rows="2"></textarea></label><button class="primary wide" type="submit">Save expense</button><button class="secondary wide hidden" type="button" id="cancelExpenseEditBtn">Cancel edit</button></form><div class="card expense-summary"><div><span>Total shop expenses</span><strong id="expenseTotal">$0.00</strong></div><select id="expenseCategoryFilter"><option value="all">All categories</option></select></div><div id="expenseList"></div></section>
-<section id="pricingScreen" class="screen"><div class="card"><h3>Listing - Price Suggestions</h3><p class="muted">Build a detailed pricing request, copy it, then open ChatGPT for current market research.</p><div class="form-grid"><label>Use saved item<select id="pricingItemSelect"><option value="">Enter manually</option></select></label><label>Brand<input id="pricingBrand"></label><label>Model / item<input id="pricingModel"></label><label>Condition<select id="pricingCondition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option></select></label><label>Purchase price (all in)<input id="pricingCost" type="number" step="0.01" inputmode="decimal"></label><label>Desired minimum profit<input id="pricingProfit" type="number" step="0.01" inputmode="decimal"></label><label>Likely selling platform<input id="pricingPlatform"></label><label>Color / material<input id="pricingDetails"></label></div><label>Condition details<textarea id="pricingNotes" rows="3"></textarea></label><div class="calculation-box"><div><span>Break-even price</span><strong id="breakEvenPrice">$0.00</strong></div><div><span>Minimum target price</span><strong id="minimumTargetPrice">$0.00</strong></div></div><button id="buildPromptBtn" class="primary wide" type="button">Build pricing request</button><label>ChatGPT pricing request<textarea id="pricingPrompt" rows="12" readonly></textarea></label><button id="copyPromptBtn" class="secondary wide" type="button">Copy request</button><button id="openChatGPTBtn" class="secondary wide" type="button">Open ChatGPT</button><p class="security-note">This secure version does not store an OpenAI API key in the public GitHub Pages code.</p></div></section>
-<section id="settingsScreen" class="screen"><div class="card"><h3>Backup and export</h3><button id="exportBackupBtn" class="secondary wide">Export backup</button><label class="file-btn secondary wide">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden></label><button id="exportCsvBtn" class="secondary wide">Export inventory CSV</button><button id="exportExpensesCsvBtn" class="secondary wide">Export expenses CSV</button></div><div class="card"><button id="resetBtn" class="danger wide">Erase all business data</button></div></section>
-</main><nav class="bottom-nav"><button data-screen="dashboardScreen" class="active"><span>⌂</span>Dashboard</button><button data-screen="inventoryScreen"><span>▦</span>Inventory</button><button data-screen="addScreen"><span>＋</span>Add</button><button data-screen="expensesScreen"><span>＄</span>Expenses</button><button data-screen="pricingScreen"><span>✦</span>Pricing</button><button data-screen="settingsScreen"><span>⚙</span>Settings</button></nav><script src="app.js"></script></body></html>
+<section id="dashboardScreen" class="screen active">
+  <div class="stats-grid">
+    <div class="stat card"><span>Active inventory</span><strong id="statActive">0</strong></div>
+    <div class="stat card"><span>Inventory invested</span><strong id="statInvested">$0</strong></div>
+    <div class="stat card"><span>Sales revenue</span><strong id="statRevenue">$0</strong></div>
+    <div class="stat card"><span>Net business profit</span><strong id="statProfit">$0</strong></div>
+  </div>
+  <div class="card">
+    <h3>Business snapshot</h3>
+    <div class="snapshot-grid">
+      <div><span>Sold items</span><strong id="snapSold">0</strong></div>
+      <div><span>Shop expenses</span><strong id="snapExpenses">$0</strong></div>
+      <div><span>Average item profit</span><strong id="snapAvgProfit">$0</strong></div>
+      <div><span>Average margin</span><strong id="snapMargin">0%</strong></div>
+    </div>
+  </div>
+  <div class="card"><h3>Recent items</h3><div id="recentItems"></div></div>
+</section>
+
+<section id="inventoryScreen" class="screen">
+  <div class="card filters">
+    <input id="searchInput" type="search" placeholder="Search brand, item, platform...">
+    <select id="statusFilter"><option value="all">All items</option><option value="inventory">In inventory</option><option value="sold">Sold</option></select>
+  </div>
+  <div id="inventoryList"></div>
+</section>
+
+<section id="addScreen" class="screen">
+  <form id="itemForm" class="card">
+    <h3 id="formTitle">Add an item</h3>
+    <input type="hidden" id="itemId">
+    <div class="form-grid">
+      <label>Brand<input id="brand" required placeholder="Louis Vuitton"></label>
+      <label>Model / item<input id="model" required placeholder="Keepall 50"></label>
+      <label>Category<select id="category"><option>Handbag</option><option>Travel bag</option><option>Wallet</option><option>Accessory</option><option>Other</option></select></label>
+      <label>Condition<select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option></select></label>
+      <label>Purchase date<input id="purchaseDate" type="date"></label>
+      <label>Purchase price (all in)<input id="purchasePrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Purchase source<input id="purchaseSource" placeholder="eBay, auction, estate sale"></label>
+      <label>Authentication cost<input id="authCost" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Repair / cleaning<input id="repairCost" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Selling price<input id="sellingPrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Status<select id="status"><option value="inventory">In inventory</option><option value="sold">Sold</option></select></label>
+      <label>Selling platform<input id="platform" placeholder="eBay, Poshmark, Facebook"></label>
+      <label>Sale date<input id="saleDate" type="date"></label>
+      <label>Outbound shipping<input id="outboundShipping" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+    </div>
+    <label>Notes<textarea id="notes" rows="3" placeholder="Serial number, flaws, accessories, buyer notes..."></textarea></label>
+    <div class="calculation-box">
+      <div><span>Total item cost</span><strong id="calcInvested">$0.00</strong></div>
+      <div><span>Net proceeds</span><strong id="calcNet">$0.00</strong></div>
+      <div><span>Profit</span><strong id="calcProfit">$0.00</strong></div>
+      <div><span>Margin</span><strong id="calcMargin">0%</strong></div>
+    </div>
+    <button class="primary wide" type="submit">Save item</button>
+    <button class="secondary wide hidden" type="button" id="cancelEditBtn">Cancel edit</button>
+  </form>
+</section>
+
+<section id="expensesScreen" class="screen">
+  <form id="expenseForm" class="card">
+    <h3 id="expenseFormTitle">Add shop expense</h3>
+    <input type="hidden" id="expenseId">
+    <div class="form-grid">
+      <label>Date<input id="expenseDate" type="date" required></label>
+      <label>Category<select id="expenseCategory"><option>Supplies</option><option>Packaging</option><option>Shipping materials</option><option>Authentication</option><option>Cleaning / repair tools</option><option>Advertising</option><option>Software / subscriptions</option><option>Travel / mileage</option><option>Professional services</option><option>Other</option></select></label>
+      <label>Vendor<input id="expenseVendor" placeholder="USPS, Entrupy, Amazon..."></label>
+      <label>Amount<input id="expenseAmount" type="number" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
+    </div>
+    <label>Description<textarea id="expenseDescription" rows="2"></textarea></label>
+    <button class="primary wide" type="submit">Save expense</button>
+    <button class="secondary wide hidden" type="button" id="cancelExpenseEditBtn">Cancel edit</button>
+  </form>
+  <div class="card expense-summary"><div><span>Total shop expenses</span><strong id="expenseTotal">$0.00</strong></div><select id="expenseCategoryFilter"><option value="all">All categories</option></select></div>
+  <div id="expenseList"></div>
+</section>
+
+<section id="pricingScreen" class="screen">
+  <div class="card">
+    <div class="pricing-heading">
+      <div><h3>AI Buy & Sell Advisor</h3><p class="muted">Use current sold comps to decide what to pay and what to list for.</p></div>
+      <span class="badge">AI-assisted</span>
+    </div>
+
+    <div class="form-grid">
+      <label>Brand
+        <select id="pricingBrandSelect">
+          <option>Hermès</option><option>Chanel</option><option>Louis Vuitton</option><option>Goyard</option><option>Moynat</option><option>Delvaux</option><option>Dior</option><option>Gucci</option><option>Prada</option><option>Fendi</option><option>Celine</option><option>Saint Laurent</option><option>Balenciaga</option><option>Bottega Veneta</option><option>Loewe</option><option>Valentino</option><option>Givenchy</option><option>Burberry</option><option>Ferragamo</option><option>Tom Ford</option><option>Versace</option><option>Dolce & Gabbana</option><option>Alexander McQueen</option><option>MCM</option><option>Mulberry</option><option>Polène</option><option>Strathberry</option><option>Longchamp</option><option>Coach</option><option>Tory Burch</option><option>Kate Spade</option><option>Marc Jacobs</option><option>Rebecca Minkoff</option><option>Michael Kors</option><option>Furla</option><option>Mansur Gavriel</option><option>Judith Leiber</option><option>Bally</option><option>Dooney & Bourke</option><option>Other / Manual entry</option>
+        </select>
+      </label>
+      <label id="manualBrandWrap" class="hidden">Manual brand<input id="pricingBrandManual" placeholder="Enter brand"></label>
+      <label>Model / style<input id="pricingModel" placeholder="Neverfull MM"></label>
+      <label>Size<input id="pricingSize" placeholder="MM, 30, medium..."></label>
+      <label>Color<input id="pricingColor" placeholder="Damier Ebene, black..."></label>
+      <label>Material<input id="pricingMaterial" placeholder="Canvas, lambskin, leather..."></label>
+      <label>Hardware<input id="pricingHardware" placeholder="Gold-tone, silver-tone..."></label>
+      <label>Approximate year<input id="pricingYear" placeholder="2018 or unknown"></label>
+      <label>Condition
+        <select id="pricingCondition"><option>New</option><option>Excellent</option><option selected>Very Good</option><option>Good</option><option>Fair</option></select>
+      </label>
+      <label>Purchase price offered<input id="pricingOffer" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      <label>Target minimum profit<input id="pricingMinProfit" type="number" step="0.01" inputmode="decimal" value="250"></label>
+      <label>Target ROI<input id="pricingTargetRoi" type="number" step="1" inputmode="numeric" value="30"></label>
+      <label>Expected shipping cost<input id="pricingShipping" type="number" step="0.01" inputmode="decimal" value="25"></label>
+      <label>Likely selling platform<input id="pricingPlatform" placeholder="eBay"></label>
+    </div>
+
+    <fieldset class="accessories">
+      <legend>Included accessories</legend>
+      <label><input type="checkbox" value="Dust bag" class="accessory"> Dust bag</label>
+      <label><input type="checkbox" value="Box" class="accessory"> Box</label>
+      <label><input type="checkbox" value="Receipt" class="accessory"> Receipt</label>
+      <label><input type="checkbox" value="Authentication" class="accessory"> Authentication</label>
+      <label><input type="checkbox" value="Lock and key" class="accessory"> Lock & key</label>
+      <label><input type="checkbox" value="Strap" class="accessory"> Strap</label>
+      <label><input type="checkbox" value="Pouch" class="accessory"> Pouch</label>
+    </fieldset>
+
+    <label>Condition details<textarea id="pricingNotes" rows="4" placeholder="Corner wear, odor, stains, patina, scratches, missing parts..."></textarea></label>
+
+    <div class="instant-targets">
+      <div><span>Offer under review</span><strong id="offerReview">$0.00</strong></div>
+      <div><span>Minimum sale to hit profit goal</span><strong id="minimumSale">$0.00</strong></div>
+    </div>
+
+    <button id="buildPromptBtn" class="primary wide" type="button">Create AI market-analysis request</button>
+    <label>Request to send to ChatGPT<textarea id="pricingPrompt" rows="12" readonly></textarea></label>
+    <div class="button-row">
+      <button id="copyPromptBtn" class="secondary" type="button">Copy request</button>
+      <button id="openChatGPTBtn" class="secondary" type="button">Open ChatGPT</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Import ChatGPT pricing report</h3>
+    <p class="muted">Ask ChatGPT to return the JSON block included in the request, paste it below, then tap Import.</p>
+    <textarea id="aiJsonInput" rows="12" placeholder='{"recommended_max_purchase":700,...}'></textarea>
+    <button id="importAiBtn" class="primary wide" type="button">Import AI report</button>
+    <div id="aiReport" class="hidden"></div>
+  </div>
+</section>
+
+<section id="settingsScreen" class="screen">
+  <div class="card">
+    <h3>Backup and export</h3>
+    <button id="exportBackupBtn" class="secondary wide">Export backup</button>
+    <label class="file-btn secondary wide">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden></label>
+    <button id="exportCsvBtn" class="secondary wide">Export inventory CSV</button>
+    <button id="exportExpensesCsvBtn" class="secondary wide">Export expenses CSV</button>
+  </div>
+  <div class="card danger-zone"><h3>Reset</h3><button id="resetBtn" class="danger wide">Erase all business data</button></div>
+</section>
+</main>
+
+<nav class="bottom-nav">
+<button data-screen="dashboardScreen" class="active"><span>⌂</span>Dashboard</button>
+<button data-screen="inventoryScreen"><span>▦</span>Inventory</button>
+<button data-screen="addScreen"><span>＋</span>Add</button>
+<button data-screen="expensesScreen"><span>＄</span>Expenses</button>
+<button data-screen="pricingScreen"><span>✦</span>Pricing</button>
+<button data-screen="settingsScreen"><span>⚙</span>Settings</button>
+</nav>
+<script src="app.js"></script>
+</body>
+</html>
