@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5a2a52">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Addie Enterprises">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+  <title>Addie Enterprises</title>
+</head>
+<body>
+<header class="app-header">
+  <div>
+    <div class="eyebrow">ADDIE ENTERPRISES</div>
+    <h1 id="screenTitle">Dashboard</h1>
+  </div>
+  <button id="themeBtn" class="icon-btn" aria-label="Toggle dark mode">◐</button>
+</header>
+
+<main>
+  <section id="dashboardScreen" class="screen active">
+    <div class="stats-grid">
+      <div class="stat card"><span>Active inventory</span><strong id="statActive">0</strong></div>
+      <div class="stat card"><span>Total invested</span><strong id="statInvested">$0</strong></div>
+      <div class="stat card"><span>Total revenue</span><strong id="statRevenue">$0</strong></div>
+      <div class="stat card"><span>Total profit</span><strong id="statProfit">$0</strong></div>
+    </div>
+
+    <div class="card">
+      <h3>Business snapshot</h3>
+      <div class="snapshot-grid">
+        <div><span>Sold items</span><strong id="snapSold">0</strong></div>
+        <div><span>Average profit</span><strong id="snapAvgProfit">$0</strong></div>
+        <div><span>Average margin</span><strong id="snapMargin">0%</strong></div>
+        <div><span>Average days held</span><strong id="snapDays">0</strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Profit trend</h3>
+      <canvas id="profitChart" height="190"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Recent items</h3>
+      <div id="recentItems"></div>
+    </div>
+  </section>
+
+  <section id="inventoryScreen" class="screen">
+    <div class="card filters">
+      <input id="searchInput" type="search" placeholder="Search brand, item, platform...">
+      <select id="statusFilter">
+        <option value="all">All items</option>
+        <option value="inventory">In inventory</option>
+        <option value="sold">Sold</option>
+      </select>
+    </div>
+    <div id="inventoryList"></div>
+  </section>
+
+  <section id="addScreen" class="screen">
+    <form id="itemForm" class="card">
+      <h3 id="formTitle">Add an item</h3>
+      <input type="hidden" id="itemId">
+      <div class="form-grid">
+        <label>Brand<input id="brand" required placeholder="Louis Vuitton"></label>
+        <label>Model / item<input id="model" required placeholder="Keepall 50"></label>
+        <label>Category
+          <select id="category">
+            <option>Handbag</option><option>Travel bag</option><option>Wallet</option><option>Accessory</option><option>Other</option>
+          </select>
+        </label>
+        <label>Condition
+          <select id="condition">
+            <option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option>
+          </select>
+        </label>
+        <label>Purchase date<input id="purchaseDate" type="date"></label>
+        <label>Purchase price<input id="purchasePrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Purchase source<input id="purchaseSource" placeholder="eBay, auction, estate sale"></label>
+        <label>Authentication cost<input id="authCost" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Repair / cleaning<input id="repairCost" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Inbound shipping<input id="inboundShipping" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Other costs<input id="otherCosts" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Listing price<input id="listingPrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Status
+          <select id="status"><option value="inventory">In inventory</option><option value="sold">Sold</option></select>
+        </label>
+        <label>Selling platform<input id="platform" placeholder="eBay, Poshmark, Facebook"></label>
+        <label>Sale date<input id="saleDate" type="date"></label>
+        <label>Sale price<input id="salePrice" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Platform fees<input id="platformFees" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <label>Outbound shipping<input id="outboundShipping" type="number" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+      </div>
+
+      <label>Notes<textarea id="notes" rows="3" placeholder="Serial number, flaws, accessories, buyer notes..."></textarea></label>
+
+      <div class="calculation-box">
+        <div><span>Total invested</span><strong id="calcInvested">$0.00</strong></div>
+        <div><span>Net proceeds</span><strong id="calcNet">$0.00</strong></div>
+        <div><span>Profit</span><strong id="calcProfit">$0.00</strong></div>
+        <div><span>Margin</span><strong id="calcMargin">0%</strong></div>
+      </div>
+
+      <button class="primary wide" type="submit">Save item</button>
+      <button class="secondary wide hidden" type="button" id="cancelEditBtn">Cancel edit</button>
+    </form>
+  </section>
+
+  <section id="settingsScreen" class="screen">
+    <div class="card">
+      <h3>Backup and export</h3>
+      <p class="muted">Data stays on this device unless you export it.</p>
+      <button id="exportBackupBtn" class="secondary wide">Export backup</button>
+      <label class="file-btn secondary wide">Import backup<input id="importBackupInput" type="file" accept="application/json" hidden></label>
+      <button id="exportCsvBtn" class="secondary wide">Export CSV</button>
+    </div>
+    <div class="card danger-zone">
+      <h3>Reset</h3>
+      <button id="resetBtn" class="danger wide">Erase all business data</button>
+    </div>
+    <div class="card">
+      <h3>Install on phone</h3>
+      <ol>
+        <li>Open the live site in Safari.</li>
+        <li>Tap Share.</li>
+        <li>Tap Add to Home Screen.</li>
+        <li>Turn on Open as Web App, then tap Add.</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<nav class="bottom-nav">
+  <button data-screen="dashboardScreen" class="active"><span>⌂</span>Dashboard</button>
+  <button data-screen="inventoryScreen"><span>▦</span>Inventory</button>
+  <button data-screen="addScreen"><span>＋</span>Add item</button>
+  <button data-screen="settingsScreen"><span>⚙</span>Settings</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
