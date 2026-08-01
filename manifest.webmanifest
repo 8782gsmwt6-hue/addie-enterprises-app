@@ -1,1 +1,20 @@
-{"name":"Addie Enterprises Luxury Resale","short_name":"Addie Bags","start_url":"./","display":"standalone","background_color":"#f5f1e9","theme_color":"#182433","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]}
+{
+  "name": "Addie Enterprises Tracker",
+  "short_name": "Addie Tracker",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#17283d",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

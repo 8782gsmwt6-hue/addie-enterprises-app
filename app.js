@@ -1,92 +1,285 @@
-const $=id=>document.getElementById(id), num=v=>Number(String(v||"").replace(/[^0-9.-]/g,""))||0;
-const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
-const brands=["Louis Vuitton","Chanel","Gucci","Hermès","Prada","Bottega Veneta","Burberry","Saint Laurent","Fendi","Dior","Celine","Loewe","Balenciaga","Givenchy","Valentino","Ferragamo","Coach","Tory Burch","MCM","Goyard","Cartier","Versace","Mulberry","Chloé","Other / Enter manually"];
-$("brand").innerHTML=brands.map(x=>`<option>${x}</option>`).join("");
-$("brand").onchange=()=>$("customWrap").classList.toggle("hidden",$("brand").value!=="Other / Enter manually");
-document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab,.panel").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
-const field=id=>$(id).value.trim()||"Not provided";
-function makePrompt(){
-const margin=num($("margin").value)||25, brand=$("brand").value==="Other / Enter manually"?field("customBrand"):$("brand").value;
-const p=`Act as a cautious luxury resale pricing analyst and experienced luxury consignment buyer. Use current web research.
+import { firebaseConfig, WORKSPACE_ID } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, serverTimestamp, query, orderBy, enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-PRIMARY OBJECTIVE
-Determine the maximum purchase price that should be paid today to have a realistic chance of earning at least a ${margin}% profit on the all-in purchase cost after marketplace fees, payment costs, seller-paid shipping, and other selling costs.
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+enableIndexedDbPersistence(db).catch(() => {});
 
-Do not merely estimate resale value. Give a clear recommended purchase-price ceiling and a BUY / NEGOTIATE / PASS decision.
+const platforms = ["", "eBay", "Poshmark", "Facebook Marketplace", "Mercari", "The RealReal", "Vestiaire Collective", "Consignment Store", "Direct / Private Sale", "Other"];
+const estimatedFeeRates = {
+  "eBay": 0.15, "Poshmark": 0.20, "Facebook Marketplace": 0,
+  "Mercari": 0.10, "The RealReal": 0.40, "Vestiaire Collective": 0.15,
+  "Consignment Store": 0.40, "Direct / Private Sale": 0, "Other": 0.15, "": 0
+};
 
-ITEM
-- Brand: ${brand}
-- Model/item: ${field("model")}
-- Style/category: ${field("style")}
-- Color: ${field("color")}
-- Material: ${field("material")}
-- Size: ${field("size")}
-- Condition: ${field("condition")}
-- Condition details/flaws: ${field("details")}
-- Accessories included: ${field("accessories")}
-- Authentication status: ${field("authentication")}
-- Purchase platform/source: ${field("source")}
-- Current asking price or bid: ${$("knownPrice").value?money(num($("knownPrice").value)):"Not provided"}
-- Likely selling platform: ${field("platform")}
-- Seller-paid shipping estimate: ${money(num($("shipping").value))}
-- Target profit margin on all-in purchase cost: ${margin}%
+let items = [];
+let unsubscribeItems = null;
+const $ = id => document.getElementById(id);
+const number = v => Number(v || 0);
+const money = v => new Intl.NumberFormat("en-US", {style:"currency", currency:"USD"}).format(number(v));
+const pct = v => `${(number(v) * 100).toFixed(1)}%`;
+const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const itemCollection = () => collection(db, "workspaces", WORKSPACE_ID, "items");
 
-RESEARCH RULES
-1. Prioritize recent completed/sold listings over active asking prices.
-2. Find the closest matches by model, size, material, color, condition, accessories, and authentication status.
-3. Cite each usable comparable with platform, date, sold price, condition, and source link when available.
-4. Never invent sold listings, prices, dates, fees, links, or sell-through data.
-5. Clearly separate sold evidence from active asking prices.
-6. Exclude or down-weight obvious outliers and materially different items.
-7. If exact sold evidence is thin, say so and lower the confidence rating.
-8. Use the selling platform's current fee structure and explain all assumptions.
-9. Distinguish profit margin from ROI.
+function populatePlatforms() {
+  ["expectedPlatform", "listingPlatform"].forEach(id => {
+    $(id).innerHTML = platforms.map(p => `<option value="${p}">${p || "Select platform"}</option>`).join("");
+  });
+}
 
-CALCULATIONS
-For low, realistic, and optimistic sale scenarios, calculate:
-- Expected accepted sale price
-- Platform/payment fees
-- Shipping and other selling costs
-- Net sale proceeds
-- Maximum all-in purchase price that preserves a ${margin}% profit
+function calculation(i) {
+  const purchase = number(i.purchasePrice);
+  const shippingCosts = number(i.shippingCosts);
+  const buyerShipping = number(i.buyerPaidShipping);
+  const saleEntered = number(i.salePrice) > 0;
+  const listingEntered = number(i.listingPrice) > 0;
 
-Use:
-Maximum purchase price = net sale proceeds ÷ (1 + target profit margin)
+  const revenue = saleEntered ? number(i.salePrice) : (listingEntered ? number(i.listingPrice) : number(i.expectedSellingPrice));
+  const platform = saleEntered ? (i.listingPlatform || i.expectedPlatform || "") : (i.listingPlatform || i.expectedPlatform || "");
+  const fee = saleEntered
+    ? number(i.actualPlatformFee)
+    : revenue * number(estimatedFeeRates[platform]);
 
-Also show:
-Dollar profit = net sale proceeds − all-in purchase price
-ROI = dollar profit ÷ all-in purchase price × 100
+  const netProceeds = revenue + buyerShipping - fee - shippingCosts;
+  const profit = netProceeds - purchase;
+  const roi = purchase > 0 ? profit / purchase : 0;
+  const type = saleEntered ? "Actual" : "Projected";
+  const basis = saleEntered ? "Sale price" : (listingEntered ? "Listing price" : "Expected price");
 
-REQUIRED OUTPUT
-A. A concise table of the best recent sold comparables, with active listings shown separately.
-B. Low, realistic, and optimistic resale outcomes; recommended listing price; expected accepted offer; lowest reasonable offer; likely time to sale; demand; liquidity; and pricing confidence.
-C. A scenario table showing sale price, fees, shipping, net proceeds, maximum purchase price, dollar profit, and ROI.
-D. Decision:
-🟢 BUY — realistic case comfortably meets the target at the current price.
-🟡 NEGOTIATE — works only below a specific price or relies too much on the optimistic case.
-🔴 PASS — current price is too high, evidence is too weak, or realistic economics miss the target.
-E. End with:
-- Recommended maximum purchase price: $___
-- Stretch maximum purchase price: $___
-- Current-price decision: BUY / NEGOTIATE / PASS / NOT PROVIDED
-- “If I were buying this item today, I would pay no more than $___.”
+  return { purchase, revenue, fee, netProceeds, profit, roi, type, basis, saleEntered };
+}
 
-Be cautious. Base the recommended maximum on the realistic case, not the optimistic case.`;
-$("prompt").value=p;return p}
-$("build").onclick=makePrompt;
-async function copyPrompt(){const p=makePrompt();try{await navigator.clipboard.writeText(p)}catch{$("prompt").select();document.execCommand("copy")}return p}
-$("copy").onclick=async()=>{$("status").textContent="Prompt copied.";await copyPrompt()};
-$("open").onclick=async()=>{await copyPrompt();$("status").textContent="Prompt copied. Opening ChatGPT — paste it into a new chat.";setTimeout(()=>location.href="https://chatgpt.com/",250)};
-function ceiling(){const sale=num($("expectedSale").value),fee=num($("fee").value)/100,ship=num($("shipping").value),m=num($("margin").value)/100;if(!sale){$("result").textContent="Enter an expected sale price.";return}const net=sale-sale*fee-ship,max=net/(1+m),profit=net-max;$("result").innerHTML=`Net proceeds: <b>${money(net)}</b><br>Preliminary maximum purchase price: <b>${money(max)}</b><br>Profit at that price: <b>${money(profit)}</b><br><small>Confirm with sold-market research.</small>`}
-["expectedSale","fee","shipping","margin"].forEach(id=>$(id).oninput=ceiling);
-let db=JSON.parse(localStorage.getItem("addie_v2")||'{"items":[],"expenses":[]}');function save(){localStorage.setItem("addie_v2",JSON.stringify(db));render()}
-$("saveItem").onclick=()=>{db.items.unshift({id:crypto.randomUUID(),name:field("itemName"),brand:field("itemBrand"),purchaseDate:$("purchaseDate").value,purchase:num($("purchasePrice").value),saleDate:$("saleDate").value,sale:num($("sellingPrice").value),platform:$("salePlatform").value,notes:$("notes").value.trim()});save()};
-$("saveExpense").onclick=()=>{const amount=num($("expenseAmount").value);if(!amount)return alert("Enter an amount.");db.expenses.unshift({id:crypto.randomUUID(),date:$("expenseDate").value,category:$("expenseCategory").value,amount,description:$("expenseDescription").value.trim()});save()};
-window.delItem=id=>{db.items=db.items.filter(x=>x.id!==id);save()};window.delExpense=id=>{db.expenses=db.expenses.filter(x=>x.id!==id);save()};
-function render(){
-$("itemList").innerHTML=db.items.length?db.items.map(x=>`<div class="item"><div class="head"><span>${x.brand} — ${x.name}</span><button class="delete" onclick="delItem('${x.id}')">Delete</button></div><div class="meta">Bought ${x.purchaseDate||"—"} for ${money(x.purchase)}${x.sale?` · Sold for ${money(x.sale)} on ${x.platform}<br>Gross profit: ${money(x.sale-x.purchase)} · ROI: ${x.purchase?((x.sale-x.purchase)/x.purchase*100).toFixed(1):"0.0"}%`:" · Unsold"}${x.notes?`<br>${x.notes}`:""}</div></div>`).join(""):'<p class="helper">No items saved.</p>';
-$("expenseList").innerHTML=db.expenses.length?db.expenses.map(x=>`<div class="item"><div class="head"><span>${x.category}</span><button class="delete" onclick="delExpense('${x.id}')">Delete</button></div><div class="meta">${x.date||"—"} · ${money(x.amount)}${x.description?` · ${x.description}`:""}</div></div>`).join(""):'<p class="helper">No expenses saved.</p>';
-const invested=db.items.reduce((a,x)=>a+x.purchase,0),sales=db.items.reduce((a,x)=>a+x.sale,0),profit=sales-invested,expenses=db.expenses.reduce((a,x)=>a+x.amount,0);
-$("sItems").textContent=db.items.length;$("sInvested").textContent=money(invested);$("sSales").textContent=money(sales);$("sProfit").textContent=money(profit);$("sExpenses").textContent=money(expenses);$("sNet").textContent=money(profit-expenses)}
-$("export").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:"application/json"}));a.download="addie-enterprises-backup.json";a.click()};
-const today=new Date().toISOString().slice(0,10);$("purchaseDate").value=today;$("expenseDate").value=today;makePrompt();render();
+function showTab(id) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === id));
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function renderMetrics() {
+  const sold = items.filter(i => number(i.salePrice) > 0 || i.status === "Sold");
+  const unsold = items.filter(i => !sold.includes(i));
+  const invested = items.reduce((s,i) => s + number(i.purchasePrice), 0);
+  const projectedProfit = unsold.reduce((s,i) => s + calculation(i).profit, 0);
+  const actualProfit = sold.reduce((s,i) => s + calculation(i).profit, 0);
+  const combinedProfit = projectedProfit + actualProfit;
+  const combinedRoi = invested > 0 ? combinedProfit / invested : 0;
+
+  const data = [
+    ["Items", items.length, "All tracked inventory"],
+    ["Sold", sold.length, "Actual sale price entered"],
+    ["Inventory Cost", money(unsold.reduce((s,i)=>s+number(i.purchasePrice),0)), "Unsold purchase cost"],
+    ["Projected Profit", money(projectedProfit), "Listing/expected prices"],
+    ["Actual Profit", money(actualProfit), "Completed sales"],
+    ["Combined Profit", money(combinedProfit), "Projected + actual"],
+    ["Combined ROI", pct(combinedRoi), "Based on purchase cost"]
+  ];
+  $("metrics").innerHTML = data.map(([label,value,sub]) => `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`).join("");
+}
+
+function renderDashboardRows() {
+  $("dashboardRows").innerHTML = items.length ? items.map(i => {
+    const c = calculation(i);
+    return `<tr>
+      <td><strong>${escapeHtml(i.brand)} ${escapeHtml(i.itemName)}</strong></td>
+      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(i.status || "In Inventory")}</span></td>
+      <td>${c.type}</td><td>${c.basis}: ${money(c.revenue)}</td>
+      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</td>
+      <td>${pct(c.roi)}</td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="6" class="empty">No items yet.</td></tr>`;
+}
+
+function renderItems() {
+  const term = $("searchInput").value.trim().toLowerCase();
+  const status = $("statusFilter").value;
+  const filtered = items.filter(i => {
+    const haystack = `${i.brand} ${i.itemName} ${i.purchaseSource} ${i.notes}`.toLowerCase();
+    return (!term || haystack.includes(term)) && (!status || i.status === status);
+  });
+
+  $("emptyItems").hidden = filtered.length > 0;
+  $("itemRows").innerHTML = filtered.map(i => {
+    const c = calculation(i);
+    const updated = i.updatedAt?.toDate ? i.updatedAt.toDate().toLocaleString() : "Syncing…";
+    return `<tr>
+      <td><strong>${escapeHtml(i.brand)}</strong><span class="muted">${escapeHtml(i.itemName)}</span></td>
+      <td>${money(i.purchasePrice)}<span class="muted">${escapeHtml(i.purchaseDate || "")}</span></td>
+      <td>${money(i.listingPrice)}<span class="muted">${escapeHtml(i.listingPlatform || "")}</span></td>
+      <td>${number(i.salePrice) ? money(i.salePrice) : "—"}<span class="muted">${escapeHtml(i.saleDate || "")}</span></td>
+      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}<span class="muted">${c.type}</span></td>
+      <td>${pct(c.roi)}</td>
+      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(i.status)}</span></td>
+      <td class="muted">${updated}</td>
+      <td><div class="row-actions"><button class="secondary edit-btn" data-id="${i.id}">Edit</button><button class="danger delete-btn" data-id="${i.id}">Delete</button></div></td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll(".edit-btn").forEach(btn => btn.onclick = () => editItem(btn.dataset.id));
+  document.querySelectorAll(".delete-btn").forEach(btn => btn.onclick = () => removeItem(btn.dataset.id));
+}
+
+function renderAll() {
+  renderMetrics();
+  renderDashboardRows();
+  renderItems();
+}
+
+function previewProfit() {
+  const draft = readForm();
+  const c = calculation(draft);
+  $("profitPreview").classList.toggle("actual", c.saleEntered);
+  $("profitPreview").innerHTML = `
+    <div class="preview-cell"><div class="k">Calculation</div><div class="v">${c.type} Profit</div></div>
+    <div class="preview-cell"><div class="k">Revenue Basis</div><div class="v">${c.basis}: ${money(c.revenue)}</div></div>
+    <div class="preview-cell"><div class="k">${c.saleEntered ? "Actual" : "Estimated"} Fees</div><div class="v">${money(c.fee)}</div></div>
+    <div class="preview-cell"><div class="k">Profit</div><div class="v ${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</div></div>
+    <div class="preview-cell"><div class="k">ROI</div><div class="v">${pct(c.roi)}</div></div>`;
+}
+
+function readForm() {
+  const fields = ["brand","itemName","category","status","colorMaterial","condition","accessories","authentication",
+    "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","expectedSellingPrice",
+    "recommendedMaxBuy","marketConfidence","listingDate","listingPlatform","listingPrice","salePrice","saleDate",
+    "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
+  return Object.fromEntries(fields.map(id => [id, $(id).value]));
+}
+
+function setForm(i = {}) {
+  const defaults = {category:"Handbag",status:"In Inventory",condition:"Excellent",authentication:"Not authenticated",
+    targetProfit:"25",marketConfidence:"Medium",shippingCosts:"0",buyerPaidShipping:"0"};
+  const values = {...defaults, ...i};
+  Object.keys(values).forEach(k => { if ($(k)) $(k).value = values[k] ?? ""; });
+  $("editId").value = i.id || "";
+  $("formTitle").textContent = i.id ? "Edit Item" : "Add Item";
+  $("deleteCurrentBtn").hidden = !i.id;
+  $("formMessage").textContent = "";
+  previewProfit();
+}
+
+async function saveItem(event) {
+  event.preventDefault();
+  const data = readForm();
+  if (!data.brand.trim() || !data.itemName.trim() || number(data.purchasePrice) < 0) return;
+  if (number(data.salePrice) > 0) data.status = "Sold";
+  data.purchasePrice = number(data.purchasePrice);
+  data.targetProfit = number(data.targetProfit);
+  data.expectedSellingPrice = number(data.expectedSellingPrice);
+  data.recommendedMaxBuy = number(data.recommendedMaxBuy);
+  data.listingPrice = number(data.listingPrice);
+  data.salePrice = number(data.salePrice);
+  data.actualPlatformFee = number(data.actualPlatformFee);
+  data.shippingCosts = number(data.shippingCosts);
+  data.buyerPaidShipping = number(data.buyerPaidShipping);
+  data.updatedAt = serverTimestamp();
+  data.updatedBy = auth.currentUser.email;
+
+  $("formMessage").className = "message";
+  $("formMessage").textContent = "Saving…";
+  try {
+    const id = $("editId").value;
+    if (id) await updateDoc(doc(db, "workspaces", WORKSPACE_ID, "items", id), data);
+    else {
+      data.createdAt = serverTimestamp();
+      data.createdBy = auth.currentUser.email;
+      await addDoc(itemCollection(), data);
+    }
+    $("formMessage").className = "message ok";
+    $("formMessage").textContent = "Saved and synced.";
+    setForm();
+    showTab("items");
+  } catch (error) {
+    $("formMessage").className = "message error";
+    $("formMessage").textContent = error.message;
+  }
+}
+
+function editItem(id) {
+  const i = items.find(x => x.id === id);
+  if (!i) return;
+  setForm(i);
+  showTab("add");
+}
+
+async function removeItem(id) {
+  const i = items.find(x => x.id === id);
+  if (!i || !confirm(`Delete ${i.brand} ${i.itemName}? This removes it for every device.`)) return;
+  await deleteDoc(doc(db, "workspaces", WORKSPACE_ID, "items", id));
+  if ($("editId").value === id) setForm();
+}
+
+function startItemSync() {
+  if (unsubscribeItems) unsubscribeItems();
+  $("syncBadge").textContent = "Syncing…";
+  const q = query(itemCollection(), orderBy("updatedAt", "desc"));
+  unsubscribeItems = onSnapshot(q, snapshot => {
+    items = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
+    $("syncBadge").textContent = navigator.onLine ? "Cloud synced" : "Offline";
+    renderAll();
+  }, error => {
+    $("syncBadge").textContent = "Sync error";
+    console.error(error);
+  });
+}
+
+onAuthStateChanged(auth, user => {
+  $("authScreen").hidden = !!user;
+  $("appShell").hidden = !user;
+  if (user) {
+    $("currentUser").textContent = `Signed in as ${user.email}`;
+    startItemSync();
+    setForm();
+  } else {
+    if (unsubscribeItems) unsubscribeItems();
+    items = [];
+  }
+});
+
+$("authForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  $("authMessage").className = "message";
+  $("authMessage").textContent = "Signing in…";
+  try {
+    await signInWithEmailAndPassword(auth, $("authEmail").value.trim(), $("authPassword").value);
+    $("authMessage").textContent = "";
+  } catch (error) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = error.message;
+  }
+});
+
+$("createAccountBtn").onclick = async () => {
+  $("authMessage").className = "message";
+  $("authMessage").textContent = "Creating account…";
+  try {
+    await createUserWithEmailAndPassword(auth, $("authEmail").value.trim(), $("authPassword").value);
+  } catch (error) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = error.message;
+  }
+};
+
+$("signOutBtn").onclick = $("settingsSignOutBtn").onclick = () => signOut(auth);
+$("itemForm").addEventListener("submit", saveItem);
+$("cancelEditBtn").onclick = () => { setForm(); showTab("items"); };
+$("newItemBtn").onclick = () => { setForm(); showTab("add"); };
+$("deleteCurrentBtn").onclick = () => removeItem($("editId").value);
+$("searchInput").addEventListener("input", renderItems);
+$("statusFilter").addEventListener("change", renderItems);
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+["purchasePrice","expectedSellingPrice","listingPrice","salePrice","actualPlatformFee","shippingCosts","buyerPaidShipping","expectedPlatform","listingPlatform"]
+  .forEach(id => $(id).addEventListener("input", previewProfit));
+
+window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecting…");
+window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
+
+populatePlatforms();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(console.error);

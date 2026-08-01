@@ -1,94 +1,186 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#182433">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Addie Bags">
-<title>Addie Enterprises v3.1</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<style>
-:root{--navy:#182433;--gold:#b89258;--cream:#f5f1e9;--card:#fff;--ink:#18212b;--muted:#68727d;--line:#d9dee4;--green:#147a4b;--yellow:#a76500;--red:#b42318;--shadow:0 8px 26px rgba(24,36,51,.12)}
-*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--cream);color:var(--ink);padding-bottom:env(safe-area-inset-bottom)}
-header{position:sticky;top:0;z-index:20;background:var(--navy);color:white;padding:calc(15px + env(safe-area-inset-top)) 16px 14px;box-shadow:var(--shadow)}header h1{font-size:1.15rem;margin:0}header p{margin:3px 0 0;color:#d7dfe8;font-size:.82rem}
-main{max-width:1250px;margin:auto;padding:14px}.tabs{display:flex;gap:8px;overflow:auto;padding:2px 0 10px}.tab{border:0;border-radius:999px;padding:10px 14px;font-weight:800;background:#e3e7eb;color:var(--navy);white-space:nowrap}.tab.active{background:var(--gold);color:white}.panel{display:none}.panel.active{display:block}
-.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}h2{font-size:1.05rem;margin:0 0 12px}.section-title{font-size:.9rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px;font-weight:900}.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.row.three{grid-template-columns:repeat(3,minmax(0,1fr))}.row.four{grid-template-columns:repeat(4,minmax(0,1fr))}.row>div{min-width:0}
-label{display:block;font-size:.78rem;font-weight:800;color:var(--muted);margin:0 0 5px}input,select,textarea,button{font:inherit}input,select,textarea{display:block;width:100%;min-width:0;max-width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font-size:16px}input[type="date"]{-webkit-appearance:none;appearance:none;min-height:46px}textarea{min-height:84px;resize:vertical}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}.primary,.secondary,.danger,.chatgpt{border:0;border-radius:10px;padding:11px 15px;font-weight:850}.primary{background:var(--navy);color:white}.secondary{background:#e9edf1;color:var(--navy)}.danger{background:#fee4e2;color:var(--red)}.chatgpt{background:#0f766e;color:white}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:14px}.metric{background:white;border-radius:15px;padding:14px;box-shadow:var(--shadow)}.metric small{color:var(--muted);display:block}.metric strong{font-size:1.3rem;display:block;margin-top:3px}.metric.good strong{color:var(--green)}.metric.bad strong{color:var(--red)}
-.result{border:2px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}.result.green{border-color:#86c9a7;background:#effaf4}.result.yellow{border-color:#efc36a;background:#fff8e8}.result.red{border-color:#efa29a;background:#fff1f0}.signal{display:inline-block;border-radius:999px;padding:5px 9px;font-weight:900;font-size:.78rem}.green .signal{background:#d7f2e3;color:var(--green)}.yellow .signal{background:#ffebbd;color:var(--yellow)}.red .signal{background:#ffd9d5;color:var(--red)}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:1500px;background:white}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;font-size:.8rem;vertical-align:top}th{background:var(--navy);color:white;position:sticky;top:0}.profit-pos{color:var(--green);font-weight:900}.profit-neg{color:var(--red);font-weight:900}.pill{display:inline-block;border-radius:999px;padding:4px 8px;background:#eef1f4;font-weight:800;font-size:.72rem}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.toolbar>*{flex:1;min-width:160px}.note{font-size:.84rem;color:var(--muted);line-height:1.5}.hidden{display:none}.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#147a4b;color:#fff;padding:12px 18px;border-radius:999px;font-weight:850;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.22s;z-index:100}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}.save-note{font-size:.82rem;color:var(--muted);align-self:center}.expense-list{display:grid;gap:8px}.expense{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding:9px 0}.right{text-align:right}
-@media(max-width:1100px){.row.four{grid-template-columns:repeat(2,minmax(0,1fr))}.row.three{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){main{padding:11px}.row,.row.three,.row.four{grid-template-columns:1fr}.card{padding:14px}.actions button{flex:1 1 100%}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#17283d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Addie Tracker" />
+  <title>Addie Enterprises Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<header><h1>Addie Enterprises</h1><p>Luxury resale pricing, inventory and profitability tracker</p></header>
-<main>
-<nav class="tabs">
-<button class="tab active" data-tab="dashboard">Dashboard</button>
-<button class="tab" data-tab="items">Items</button>
-<button class="tab" data-tab="pricing">Pricing</button>
-<button class="tab" data-tab="expenses">Shop Expenses</button>
-<button class="tab" data-tab="backup">Backup</button>
-</nav>
-<section id="dashboard" class="panel active"><div id="metrics" class="metrics"></div><div class="card"><h2>Business Snapshot</h2><div id="snapshot"></div></div></section>
-<section id="items" class="panel">
-<form id="itemForm" class="card"><h2 id="itemFormTitle">Add or Update an Item</h2><input type="hidden" id="editId">
-<div class="section-title">Item details</div>
-<div class="row three"><div><label>Brand</label><select id="brand" required></select></div><div id="manualBrandWrap" class="hidden"><label>Manual brand</label><input id="manualBrand"></div><div><label>Model / Item</label><input id="model" required placeholder="Neverfull MM"></div></div>
-<div class="row four"><div><label>Category</label><select id="category"><option>Handbag</option><option>Tote</option><option>Shoulder Bag</option><option>Crossbody</option><option>Clutch</option><option>Wallet</option><option>Backpack</option><option>Travel Bag</option><option>Accessory</option><option>Other</option></select></div><div><label>Color / Material</label><input id="colorMaterial" placeholder="Brown monogram canvas"></div><div><label>Condition</label><select id="condition"><option>New / Unused</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor / Project</option></select></div><div><label>Status</label><select id="status"><option>Purchased</option><option>Preparing</option><option>Listed</option><option>Sold</option><option>Returned</option><option>Personal</option></select></div></div>
-<div class="row three"><div><label>Accessories</label><input id="accessories" placeholder="Dust bag, box, strap"></div><div><label>Authentication</label><select id="authentication"><option>Not authenticated</option><option>Pending</option><option>Authenticated</option><option>Receipt / Provenance</option></select></div><div><label>Serial / Date Code</label><input id="serialCode"></div></div>
-<div class="section-title">Purchase and pricing analysis</div>
-<div class="row four"><div><label>Purchase Date</label><input id="purchaseDate" type="date"></div><div><label>Purchase Source</label><input id="purchaseSource" placeholder="Estate sale, auction, eBay"></div><div><label>Purchase Price (all in)</label><input id="purchasePrice" type="number" min="0" step="0.01" required></div><div><label>Target Profit</label><input id="targetProfit" type="number" min="0" step="1" value="25"></div></div>
-<div class="row four"><div><label>Expected Sale Platform</label><select id="expectedPlatform"></select></div><div><label>Expected Selling Price</label><input id="expectedSalePrice" type="number" min="0" step="0.01"></div><div><label>Recommended Max Buy</label><input id="recommendedMaxBuy" type="number" min="0" step="0.01"></div><div><label>Market Confidence</label><select id="marketConfidence"><option>High</option><option selected>Medium</option><option>Low</option></select></div></div>
-<div id="itemPreview" class="result yellow"></div>
-<div class="section-title">Listing and actual sale</div>
-<div class="row four"><div><label>Listing Date</label><input id="listingDate" type="date"></div><div><label>Listing Platform</label><select id="listingPlatform"></select></div><div><label>Listing Price</label><input id="listingPrice" type="number" min="0" step="0.01"></div><div><label>Actual Selling Price</label><input id="sellingPrice" type="number" min="0" step="0.01"></div></div>
-<div class="row four"><div><label>Sale Date</label><input id="saleDate" type="date"></div><div><label>Actual Platform Fee</label><input id="actualFees" type="number" min="0" step="0.01"></div><div><label>Shipping / Selling Costs</label><input id="sellingCosts" type="number" min="0" step="0.01" value="0"></div><div><label>Buyer-paid Shipping</label><input id="buyerShipping" type="number" min="0" step="0.01" value="0"></div></div>
-<div class="row"><div><label>Condition / Research Notes</label><textarea id="notes"></textarea></div><div><label>Pricing Analysis Result</label><textarea id="pricingAnalysis" placeholder="Paste ChatGPT pricing result here"></textarea></div></div>
-<div class="actions"><button class="primary" type="submit" id="saveItemButton">Save Item</button><button class="secondary" type="button" id="clearItem">Clear</button><button class="chatgpt" type="button" id="itemChatGPT">Open Pricing Prompt in ChatGPT</button><span id="saveNote" class="save-note" aria-live="polite"></span></div></form>
-<div class="card"><div class="toolbar"><input id="itemSearch" placeholder="Search brand, model or notes"><select id="itemStatusFilter"><option value="">All statuses</option><option>Purchased</option><option>Preparing</option><option>Listed</option><option>Sold</option><option>Returned</option><option>Personal</option></select></div><div class="table-wrap"><table><thead><tr><th>Brand / Item</th><th>Status</th><th>Purchase</th><th>Expected Sale</th><th>Max Buy</th><th>Buy Signal</th><th>Actual Sale</th><th>Fees & Costs</th><th>Net Proceeds</th><th>Profit</th><th>ROI</th><th>Days Held</th><th>Platform</th><th>Actions</th></tr></thead><tbody id="itemsBody"></tbody></table></div></div>
-</section>
-<section id="pricing" class="panel"><form id="pricingForm" class="card"><h2>Listing & Purchase Price Suggestions</h2><p class="note">Estimate the maximum purchase price needed to earn the target return after expected platform fees.</p>
-<div class="row three"><div><label>Brand</label><select id="pBrand"></select></div><div><label>Model / Item</label><input id="pModel"></div><div><label>Condition</label><select id="pCondition"><option>New / Unused</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor / Project</option></select></div></div>
-<div class="row four"><div><label>Platform</label><select id="pPlatform"></select></div><div><label>Expected Selling Price</label><input id="pSale" type="number" min="0" step="0.01"></div><div><label>Target Profit</label><input id="pTarget" type="number" min="0" value="25"></div><div><label>Estimated Selling Costs</label><input id="pCosts" type="number" min="0" step="0.01" value="0"></div></div>
-<div class="row"><div><label>Color / Material</label><input id="pColor"></div><div><label>Details / Accessories</label><textarea id="pDetails"></textarea></div></div><div id="pricingResult" class="result yellow"></div><div class="actions"><button class="chatgpt" type="button" id="pricingChatGPT">Research in ChatGPT</button><button class="secondary" type="button" id="copyToItem">Copy Analysis to Item Tab</button></div></form></section>
-<section id="expenses" class="panel"><form id="expenseForm" class="card"><h2>Add Shop Expense</h2><div class="row four"><div><label>Date</label><input id="expenseDate" type="date" required></div><div><label>Category</label><select id="expenseCategory"><option>Authentication</option><option>Cleaning / Repair</option><option>Packaging</option><option>Shipping Supplies</option><option>Software</option><option>Marketing</option><option>Mileage / Travel</option><option>Other</option></select></div><div><label>Description</label><input id="expenseDescription" required></div><div><label>Amount</label><input id="expenseAmount" type="number" min="0" step="0.01" required></div></div><div class="actions"><button class="primary">Save Expense</button></div></form><div class="card"><h2>Expense History</h2><div id="expenseList" class="expense-list"></div></div></section>
-<section id="backup" class="panel"><div class="card"><h2>Backup & Restore</h2><p class="note">Data is stored in this browser on this device. Export a backup before replacing the GitHub site or clearing browser data.</p><div class="actions"><button class="primary" id="exportBackup">Export Full Backup</button><button class="secondary" id="exportCsv">Export Items CSV</button><button class="secondary" id="importBackup">Import Backup</button><input id="backupFile" type="file" accept="application/json" hidden><button class="danger" id="eraseAll">Erase All Data</button></div></div><div class="card"><h2>Install on iPhone or iPad</h2><p class="note">Open the deployed site in Safari, tap Share, choose Add to Home Screen, then tap Add.</p></div></section>
-</main><div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script>
-const KEY='addieEnterprisesV3';
-const brands=['Louis Vuitton','Gucci','Chanel','Hermès','Prada','Bottega Veneta','Burberry','Fendi','Dior','Saint Laurent','Celine','Givenchy','Balenciaga','Loewe','Valentino','Coach','Tory Burch','MCM','Goyard','Ferragamo','Cartier','Other / Manual'];
-const platforms=['eBay','Poshmark','Facebook Marketplace','Mercari','The RealReal','Vestiaire Collective','Consignment Store','Direct / Private Sale','Other'];
-const feeRates={'eBay':.15,'Poshmark':.20,'Facebook Marketplace':.10,'Mercari':.10,'The RealReal':.30,'Vestiaire Collective':.15,'Consignment Store':.35,'Direct / Private Sale':0,'Other':.15};
-let db={items:[],expenses:[]};try{const saved=localStorage.getItem(KEY);if(saved)db=JSON.parse(saved)}catch(err){console.warn('Could not read saved data',err)}if(!Array.isArray(db.items))db.items=[];if(!Array.isArray(db.expenses))db.expenses=[];
-const $=id=>document.getElementById(id);const n=v=>Number(v||0);const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n(v));const pct=v=>`${(n(v)*100).toFixed(1)}%`;const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const makeId=()=>globalThis.crypto&&typeof globalThis.crypto.randomUUID==='function'?globalThis.crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`;function toast(message,ok=true){const t=$('toast');t.textContent=message;t.style.background=ok?'#147a4b':'#b42318';t.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove('show'),2600)}function persist(){try{localStorage.setItem(KEY,JSON.stringify(db));renderAll();return true}catch(err){console.error('Save failed',err);toast('Could not save on this device.',false);return false}}
-function fillSelect(id,arr,blank=false){$(id).innerHTML=(blank?'<option value="">Select</option>':'')+arr.map(x=>`<option>${x}</option>`).join('')}
-['brand','pBrand'].forEach(id=>fillSelect(id,brands));['expectedPlatform','listingPlatform','pPlatform'].forEach(id=>fillSelect(id,platforms,true));
-function feeRate(platform){return feeRates[platform]??.15}function maxBuy(sale,platform,target,costs=0){return Math.max(0,(n(sale)*(1-feeRate(platform))-n(costs))/(1+n(target)/100))}
-function itemCalc(i){const expectedFee=n(i.expectedSalePrice)*feeRate(i.expectedPlatform);const expectedNet=n(i.expectedSalePrice)-expectedFee;const expectedProfit=expectedNet-n(i.purchasePrice);const expectedROI=n(i.purchasePrice)?expectedProfit/n(i.purchasePrice):0;const max=maxBuy(i.expectedSalePrice,i.expectedPlatform,i.targetProfit,0);const actualFee=i.actualFees!==''&&i.actualFees!=null?n(i.actualFees):n(i.sellingPrice)*feeRate(i.listingPlatform);const net=n(i.sellingPrice)+n(i.buyerShipping)-actualFee-n(i.sellingCosts);const profit=i.sellingPrice?net-n(i.purchasePrice):0;const roi=i.sellingPrice&&n(i.purchasePrice)?profit/n(i.purchasePrice):0;let days='—';if(i.purchaseDate){const end=i.saleDate?new Date(i.saleDate):new Date();days=Math.max(0,Math.round((end-new Date(i.purchaseDate))/86400000))}const signal=n(i.purchasePrice)<=max*.95?'Green':n(i.purchasePrice)<=max*1.05?'Yellow':'Red';return{expectedFee,expectedNet,expectedProfit,expectedROI,max,actualFee,net,profit,roi,days,signal}}
-function resultHtml(purchase,sale,platform,target,costs=0){const max=maxBuy(sale,platform,target,costs);const fee=n(sale)*feeRate(platform);const net=n(sale)-fee-n(costs);const profit=net-n(purchase);const roi=n(purchase)?profit/n(purchase):0;const signal=!purchase?'Yellow':n(purchase)<=max*.95?'Green':n(purchase)<=max*1.05?'Yellow':'Red';return{signal,html:`<span class="signal">${signal} ${signal==='Green'?'BUY ZONE':signal==='Yellow'?'CAUTION':'PASS / RENEGOTIATE'}</span><div class="row four" style="margin-top:10px"><div><label>Estimated Platform Fee</label><strong>${money(fee)}</strong></div><div><label>Expected Net Proceeds</label><strong>${money(net)}</strong></div><div><label>Maximum Buy for ${n(target)}% Profit</label><strong>${money(max)}</strong></div><div><label>Projected Profit / ROI</label><strong>${money(profit)} / ${pct(roi)}</strong></div></div>`}}
-function refreshItemPreview(){const r=resultHtml($('purchasePrice').value,$('expectedSalePrice').value,$('expectedPlatform').value,$('targetProfit').value);$('itemPreview').className=`result ${r.signal.toLowerCase()}`;$('itemPreview').innerHTML=r.html;if(!$('recommendedMaxBuy').value)$('recommendedMaxBuy').value=maxBuy($('expectedSalePrice').value,$('expectedPlatform').value,$('targetProfit').value).toFixed(2)}
-function refreshPricing(){const r=resultHtml(0,$('pSale').value,$('pPlatform').value,$('pTarget').value,$('pCosts').value);$('pricingResult').className=`result ${r.signal.toLowerCase()}`;$('pricingResult').innerHTML=r.html}
-['purchasePrice','expectedSalePrice','expectedPlatform','targetProfit'].forEach(id=>$(id).addEventListener('input',refreshItemPreview));['pSale','pPlatform','pTarget','pCosts'].forEach(id=>$(id).addEventListener('input',refreshPricing));
-$('brand').addEventListener('change',()=>{$('manualBrandWrap').classList.toggle('hidden',$('brand').value!=='Other / Manual')});
-function getItemForm(){const brand=$('brand').value==='Other / Manual'?$('manualBrand').value:$('brand').value;return{id:$('editId').value||makeId(),brand,model:$('model').value,category:$('category').value,colorMaterial:$('colorMaterial').value,condition:$('condition').value,status:$('status').value,accessories:$('accessories').value,authentication:$('authentication').value,serialCode:$('serialCode').value,purchaseDate:$('purchaseDate').value,purchaseSource:$('purchaseSource').value,purchasePrice:n($('purchasePrice').value),targetProfit:n($('targetProfit').value),expectedPlatform:$('expectedPlatform').value,expectedSalePrice:n($('expectedSalePrice').value),recommendedMaxBuy:n($('recommendedMaxBuy').value),marketConfidence:$('marketConfidence').value,listingDate:$('listingDate').value,listingPlatform:$('listingPlatform').value,listingPrice:n($('listingPrice').value),sellingPrice:n($('sellingPrice').value),saleDate:$('saleDate').value,actualFees:$('actualFees').value,sellingCosts:n($('sellingCosts').value),buyerShipping:n($('buyerShipping').value),notes:$('notes').value,pricingAnalysis:$('pricingAnalysis').value}}
-$('itemForm').addEventListener('submit',e=>{e.preventDefault();e.stopPropagation();const form=e.currentTarget;if(!form.reportValidity())return;const item=getItemForm();if(!item.brand.trim()){toast('Please enter a brand.',false);return}const idx=db.items.findIndex(x=>x.id===item.id);const wasEditing=idx>=0;if(wasEditing)db.items[idx]=item;else db.items.unshift(item);if(!persist())return;clearItem();showTab('items');$('saveNote').textContent=wasEditing?'Item updated successfully.':'Item saved successfully.';toast(wasEditing?'Item updated.':'Item saved.');setTimeout(()=>{$('saveNote').textContent=''},3500);document.querySelector('.table-wrap')?.scrollIntoView({behavior:'smooth',block:'start'})});
-function clearItem(){$('itemForm').reset();$('editId').value='';$('targetProfit').value=25;$('sellingCosts').value=0;$('buyerShipping').value=0;$('manualBrandWrap').classList.add('hidden');$('itemFormTitle').textContent='Add or Update an Item';refreshItemPreview()};$('clearItem').addEventListener('click',clearItem);
-function editItem(id){const i=db.items.find(x=>x.id===id);if(!i)return;for(const key of ['model','category','colorMaterial','condition','status','accessories','authentication','serialCode','purchaseDate','purchaseSource','purchasePrice','targetProfit','expectedPlatform','expectedSalePrice','recommendedMaxBuy','marketConfidence','listingDate','listingPlatform','listingPrice','sellingPrice','saleDate','actualFees','sellingCosts','buyerShipping','notes','pricingAnalysis'])if($(key))$(key).value=i[key]??'';if(brands.includes(i.brand)){$('brand').value=i.brand;$('manualBrandWrap').classList.add('hidden')}else{$('brand').value='Other / Manual';$('manualBrand').value=i.brand;$('manualBrandWrap').classList.remove('hidden')}$('editId').value=i.id;$('itemFormTitle').textContent=`Editing ${i.brand} ${i.model}`;refreshItemPreview();showTab('items');scrollTo({top:0,behavior:'smooth'})}
-function deleteItem(id){if(confirm('Delete this item?')){db.items=db.items.filter(x=>x.id!==id);persist()}}
-function renderItems(){const q=$('itemSearch').value.toLowerCase(),sf=$('itemStatusFilter').value;const rows=db.items.filter(i=>(!q||`${i.brand} ${i.model} ${i.notes}`.toLowerCase().includes(q))&&(!sf||i.status===sf)).map(i=>{const c=itemCalc(i);return `<tr><td><strong>${esc(i.brand)}</strong><br>${esc(i.model)}<br><small>${esc(i.condition)}</small></td><td><span class="pill">${esc(i.status)}</span></td><td>${money(i.purchasePrice)}<br><small>${esc(i.purchaseDate||'')}</small></td><td>${money(i.expectedSalePrice)}</td><td>${money(i.recommendedMaxBuy||c.max)}</td><td><span class="pill">${c.signal}</span></td><td>${i.sellingPrice?money(i.sellingPrice):'—'}<br><small>${esc(i.saleDate||'')}</small></td><td>${i.sellingPrice?money(c.actualFee+n(i.sellingCosts)):'—'}</td><td>${i.sellingPrice?money(c.net):'—'}</td><td class="${c.profit>=0?'profit-pos':'profit-neg'}">${i.sellingPrice?money(c.profit):'—'}</td><td>${i.sellingPrice?pct(c.roi):pct(c.expectedROI)}${!i.sellingPrice?'<br><small>expected</small>':''}</td><td>${c.days}</td><td>${esc(i.listingPlatform||i.expectedPlatform||'')}</td><td><button class="secondary" onclick="editItem('${i.id}')">Edit</button> <button class="danger" onclick="deleteItem('${i.id}')">Delete</button></td></tr>`}).join('');$('itemsBody').innerHTML=rows||'<tr><td colspan="14">No items saved yet.</td></tr>'}
-$('itemSearch').addEventListener('input',renderItems);$('itemStatusFilter').addEventListener('change',renderItems);
-function renderMetrics(){const sold=db.items.filter(i=>i.sellingPrice||i.status==='Sold');const active=db.items.filter(i=>!sold.includes(i)&&!['Returned','Personal'].includes(i.status));const invested=active.reduce((s,i)=>s+n(i.purchasePrice),0);const realized=sold.reduce((s,i)=>s+itemCalc(i).profit,0);const projected=active.reduce((s,i)=>s+itemCalc(i).expectedProfit,0);const expenses=db.expenses.reduce((s,e)=>s+n(e.amount),0);const green=db.items.filter(i=>itemCalc(i).signal==='Green').length;const roi=sold.reduce((s,i)=>s+n(i.purchasePrice),0)?realized/sold.reduce((s,i)=>s+n(i.purchasePrice),0):0;const data=[['Items Tracked',db.items.length],['Active Inventory',active.length],['Cash in Inventory',money(invested)],['Projected Inventory Profit',money(projected)],['Realized Item Profit',money(realized)],['Shop Expenses',money(expenses)],['Business Profit',money(realized-expenses)],['Actual ROI',pct(roi)],['Green-Zone Buys',green]];$('metrics').innerHTML=data.map(([l,v],idx)=>`<div class="metric ${idx===6?(realized-expenses>=0?'good':'bad'):''}"><small>${l}</small><strong>${v}</strong></div>`).join('');$('snapshot').innerHTML=`<p><strong>${sold.length}</strong> sold item(s), <strong>${active.length}</strong> active item(s), and <strong>${db.expenses.length}</strong> shop expense(s).</p><p class="note">Business Profit subtracts shop expenses from realized item profit. Unsold inventory profit remains projected until an actual sale is entered.</p>`}
-function buildPrompt(source='pricing'){let brand,model,condition,color,details,platform,sale,target,purchase;if(source==='item'){const i=getItemForm();brand=i.brand;model=i.model;condition=i.condition;color=i.colorMaterial;details=`Accessories: ${i.accessories||'Not provided'}. Notes: ${i.notes||'Not provided'}`;platform=i.expectedPlatform;sale=i.expectedSalePrice;target=i.targetProfit;purchase=i.purchasePrice}else{brand=$('pBrand').value;model=$('pModel').value;condition=$('pCondition').value;color=$('pColor').value;details=$('pDetails').value;platform=$('pPlatform').value;sale=$('pSale').value;target=$('pTarget').value;purchase='Not yet purchased'}return `Act as a cautious luxury resale pricing analyst. Use current web research and prioritize recent completed/sold listings over active asking prices. Do not invent sold-listing data.\n\nItem:\n- Brand: ${brand}\n- Model/item: ${model}\n- Condition: ${condition}\n- Color/material: ${color||'Not provided'}\n- Details/accessories: ${details||'Not provided'}\n- Purchase price (all in): ${purchase}\n- Likely platform: ${platform}\n- Target return on purchase cost: ${target}%\n- Preliminary expected selling price: ${sale||'Unknown'}\n\nFind recent sold/completed comparables with dates and platforms. Estimate low, realistic, and optimistic resale values. Calculate the maximum all-in purchase price that would produce at least a ${target}% return after platform fees and normal selling costs. Give a Green / Yellow / Red buying recommendation, recommended listing price, expected accepted-offer price, lowest reasonable selling price, likely time-to-sale, major condition risks, and a concise final verdict.`}
-function openGPT(prompt){location.href=`https://chatgpt.com/?q=${encodeURIComponent(prompt)}`}$('itemChatGPT').addEventListener('click',()=>openGPT(buildPrompt('item')));$('pricingChatGPT').addEventListener('click',()=>openGPT(buildPrompt('pricing')));
-$('copyToItem').addEventListener('click',()=>{$('brand').value=$('pBrand').value;$('model').value=$('pModel').value;$('condition').value=$('pCondition').value;$('colorMaterial').value=$('pColor').value;$('expectedPlatform').value=$('pPlatform').value;$('expectedSalePrice').value=$('pSale').value;$('targetProfit').value=$('pTarget').value;$('notes').value=$('pDetails').value;$('recommendedMaxBuy').value=maxBuy($('pSale').value,$('pPlatform').value,$('pTarget').value,$('pCosts').value).toFixed(2);refreshItemPreview();showTab('items')});
-$('expenseForm').addEventListener('submit',e=>{e.preventDefault();db.expenses.unshift({id:makeId(),date:$('expenseDate').value,category:$('expenseCategory').value,description:$('expenseDescription').value,amount:n($('expenseAmount').value)});persist();e.target.reset()});function deleteExpense(id){if(confirm('Delete this expense?')){db.expenses=db.expenses.filter(e=>e.id!==id);persist()}}function renderExpenses(){$('expenseList').innerHTML=db.expenses.map(e=>`<div class="expense"><div><strong>${esc(e.description)}</strong><br><small>${esc(e.date)} · ${esc(e.category)}</small></div><div class="right"><strong>${money(e.amount)}</strong><br><button class="danger" onclick="deleteExpense('${e.id}')">Delete</button></div></div>`).join('')||'<p class="note">No shop expenses recorded.</p>'}
-function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}$('exportBackup').addEventListener('click',()=>download(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),`addie-enterprises-backup-${new Date().toISOString().slice(0,10)}.json`));$('exportCsv').addEventListener('click',()=>{const headers=['Brand','Model','Status','Purchase Date','Purchase Price','Expected Platform','Expected Sale','Max Buy','Listing Platform','Selling Price','Sale Date','Actual Fees','Selling Costs','Net Proceeds','Profit','ROI'];const rows=db.items.map(i=>{const c=itemCalc(i);return[i.brand,i.model,i.status,i.purchaseDate,i.purchasePrice,i.expectedPlatform,i.expectedSalePrice,i.recommendedMaxBuy||c.max,i.listingPlatform,i.sellingPrice,i.saleDate,c.actualFee,i.sellingCosts,c.net,c.profit,c.roi]});const csv=[headers,...rows].map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');download(new Blob([csv],{type:'text/csv'}),'addie-items.csv')});$('importBackup').addEventListener('click',()=>$('backupFile').click());$('backupFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!Array.isArray(x.items)||!Array.isArray(x.expenses))throw Error();db=x;persist();alert('Backup imported.')}catch{alert('That backup file is not valid.')}};r.readAsText(f)});$('eraseAll').addEventListener('click',()=>{if(confirm('Erase every item and expense from this device?')){db={items:[],expenses:[]};persist()}});
-function showTab(id){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id))}document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
-function renderAll(){renderMetrics();renderItems();renderExpenses();refreshPricing();refreshItemPreview()}clearItem();renderAll();if('serviceWorker'in navigator)navigator.serviceWorker.register('service-worker.js').catch(()=>{});
-</script>
-</body></html>
+  <div id="authScreen" class="auth-shell">
+    <section class="auth-card">
+      <div class="brand-mark">AE</div>
+      <h1>Addie Enterprises</h1>
+      <p>Shared luxury resale inventory and profitability tracker</p>
+
+      <form id="authForm">
+        <label>Email</label>
+        <input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com" />
+        <label>Password</label>
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Minimum 6 characters" />
+        <button class="primary wide" type="submit" id="signInBtn">Sign In</button>
+      </form>
+
+      <button class="secondary wide" id="createAccountBtn">Create Account</button>
+      <p class="small">All approved users share the same Addie Enterprises inventory. Firebase Authentication protects access.</p>
+      <div id="authMessage" class="message" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div id="appShell" hidden>
+    <header class="app-header">
+      <div>
+        <h1>👜 Addie Enterprises</h1>
+        <p>Luxury resale pricing, inventory and profitability tracker</p>
+      </div>
+      <div class="header-actions">
+        <span id="syncBadge" class="sync-badge">Connecting…</span>
+        <button class="secondary" id="signOutBtn">Sign Out</button>
+      </div>
+    </header>
+
+    <main>
+      <nav class="tabs" aria-label="Main navigation">
+        <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="items">Items</button>
+        <button class="tab" data-tab="add">Add / Edit Item</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+
+      <section id="dashboard" class="panel active">
+        <div id="metrics" class="metrics"></div>
+        <div class="card">
+          <div class="section-title">Inventory Profit View</div>
+          <p class="helper">Unsold items use the listing price for projected profit. Sold items automatically switch to the actual sale price and actual fees.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Item</th><th>Status</th><th>Profit Type</th><th>Revenue Basis</th><th>Profit</th><th>ROI</th></tr>
+              </thead>
+              <tbody id="dashboardRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="items" class="panel">
+        <div class="card">
+          <div class="toolbar">
+            <input id="searchInput" placeholder="Search brand, item, source, notes…" />
+            <select id="statusFilter">
+              <option value="">All statuses</option>
+              <option>In Inventory</option>
+              <option>Listed</option>
+              <option>Sold</option>
+              <option>Returned</option>
+              <option>Keep / Personal</option>
+            </select>
+            <button id="newItemBtn" class="primary">+ New Item</button>
+          </div>
+          <div class="table-wrap">
+            <table class="wide-table">
+              <thead>
+                <tr>
+                  <th>Brand / Item</th><th>Purchase</th><th>Listing</th><th>Sale</th>
+                  <th>Profit</th><th>ROI</th><th>Status</th><th>Updated</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="itemRows"></tbody>
+            </table>
+          </div>
+          <div id="emptyItems" class="empty" hidden>No items yet. Add the first bag or accessory.</div>
+        </div>
+      </section>
+
+      <section id="add" class="panel">
+        <form id="itemForm" class="card">
+          <div class="form-heading">
+            <div>
+              <h2 id="formTitle">Add Item</h2>
+              <p class="helper">Changes save to Firebase and sync across authorized devices.</p>
+            </div>
+            <div class="actions">
+              <button type="submit" class="primary">Save Item</button>
+              <button type="button" id="cancelEditBtn" class="secondary">Cancel</button>
+            </div>
+          </div>
+          <input type="hidden" id="editId" />
+
+          <div class="section-title">Item Details</div>
+          <div class="form-grid four">
+            <div><label>Brand *</label><input id="brand" required placeholder="Louis Vuitton" /></div>
+            <div><label>Item / Model *</label><input id="itemName" required placeholder="Neverfull MM Monogram" /></div>
+            <div><label>Category</label><select id="category"><option>Handbag</option><option>Wallet</option><option>Accessory</option><option>Luggage</option><option>Clothing</option><option>Shoes</option><option>Other</option></select></div>
+            <div><label>Status</label><select id="status"><option>In Inventory</option><option>Listed</option><option>Sold</option><option>Returned</option><option>Keep / Personal</option></select></div>
+            <div><label>Color / Material</label><input id="colorMaterial" placeholder="Brown monogram canvas" /></div>
+            <div><label>Condition</label><select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+            <div><label>Accessories</label><input id="accessories" placeholder="Dust bag, box, strap" /></div>
+            <div><label>Authentication</label><select id="authentication"><option>Not authenticated</option><option>Authenticated</option><option>Pending</option><option>Not required</option></select></div>
+          </div>
+
+          <div class="section-title">Purchase and Pricing Analysis</div>
+          <div class="form-grid four">
+            <div><label>Purchase Date</label><input id="purchaseDate" type="date" /></div>
+            <div><label>Purchase Source</label><input id="purchaseSource" placeholder="Estate sale, auction, eBay" /></div>
+            <div><label>Purchase Price (all in) *</label><input id="purchasePrice" type="number" min="0" step="0.01" required /></div>
+            <div><label>Target Profit (%)</label><input id="targetProfit" type="number" min="0" step="0.1" value="25" /></div>
+            <div><label>Expected Sale Platform</label><select id="expectedPlatform"></select></div>
+            <div><label>Expected Selling Price</label><input id="expectedSellingPrice" type="number" min="0" step="0.01" placeholder="850.00" /></div>
+            <div><label>Recommended Max Buy</label><input id="recommendedMaxBuy" type="number" min="0" step="0.01" /></div>
+            <div><label>Market Confidence</label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+          </div>
+
+          <div class="section-title">Listing and Actual Sale</div>
+          <div class="form-grid four">
+            <div><label>Listing Date</label><input id="listingDate" type="date" /></div>
+            <div><label>Listing Platform</label><select id="listingPlatform"></select></div>
+            <div><label>Listing Price</label><input id="listingPrice" type="number" min="0" step="0.01" placeholder="899.00" /></div>
+            <div><label>Actual Sale Price</label><input id="salePrice" type="number" min="0" step="0.01" placeholder="760.00" /></div>
+            <div><label>Sale Date</label><input id="saleDate" type="date" /></div>
+            <div><label>Actual Platform Fee</label><input id="actualPlatformFee" type="number" min="0" step="0.01" placeholder="76.00" /></div>
+            <div><label>Shipping / Selling Costs</label><input id="shippingCosts" type="number" min="0" step="0.01" value="0" /></div>
+            <div><label>Buyer-paid Shipping</label><input id="buyerPaidShipping" type="number" min="0" step="0.01" value="0" /></div>
+          </div>
+
+          <div id="profitPreview" class="profit-preview"></div>
+
+          <div class="form-grid two">
+            <div><label>Condition / Research Notes</label><textarea id="notes" placeholder="Condition details, flaws, repairs, comps, serial number…"></textarea></div>
+            <div><label>Pricing Analysis Result</label><textarea id="pricingAnalysis" placeholder="Paste ChatGPT pricing result here"></textarea></div>
+          </div>
+
+          <div class="actions bottom-actions">
+            <button type="submit" class="primary">Save Item</button>
+            <button type="button" id="deleteCurrentBtn" class="danger" hidden>Delete Item</button>
+          </div>
+          <div id="formMessage" class="message" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section id="settings" class="panel">
+        <div class="card">
+          <div class="section-title">Device Setup</div>
+          <h3>Samsung / Android</h3>
+          <p>Open the deployed site in Chrome or Samsung Internet, open the browser menu, and choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+          <h3>iPhone / iPad</h3>
+          <p>Open the deployed site in Safari, tap <strong>Share</strong>, select <strong>Add to Home Screen</strong>, and tap <strong>Add</strong>.</p>
+          <p class="helper">Sign in with the same approved account on every device. Data is stored in Firebase rather than only on the phone.</p>
+        </div>
+        <div class="card">
+          <div class="section-title">Session</div>
+          <p id="currentUser"></p>
+          <button class="secondary" id="settingsSignOutBtn">Sign Out</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
