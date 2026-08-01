@@ -1,8 +1,14 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /workspaces/addie-enterprises/items/{itemId} {
+
+    match /Workspaces/addie-enterprises/items/{itemId} {
       allow read, create, update, delete: if request.auth != null;
+    }
+
+    match /Workspaces/addie-enterprises/members/{userId} {
+      allow read: if request.auth != null;
     }
   }
 }
