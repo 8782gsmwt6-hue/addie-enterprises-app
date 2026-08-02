@@ -145,3 +145,125 @@ button:disabled{opacity:.6;cursor:not-allowed}
     width:100%;
   }
 }
+
+
+/* v4.1.3 iPad and responsive form layout */
+.form-grid > div{
+  min-width:0;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+
+input[type="date"],
+input[type="number"]{
+  -webkit-appearance:none;
+  appearance:none;
+}
+
+#itemForm{
+  overflow:hidden;
+}
+
+#itemForm .section-title{
+  margin-top:24px;
+}
+
+#itemForm .section-title:first-of-type{
+  margin-top:4px;
+}
+
+#itemForm label{
+  min-height:18px;
+}
+
+#itemForm input,
+#itemForm select{
+  min-height:50px;
+}
+
+#itemForm textarea{
+  min-height:130px;
+}
+
+#itemForm .form-grid{
+  column-gap:18px;
+  row-gap:16px;
+}
+
+#itemForm .form-heading{
+  margin-bottom:18px;
+}
+
+#itemForm .bottom-actions{
+  padding-top:8px;
+}
+
+/* Desktop and large landscape tablets */
+@media (min-width:1201px){
+  .form-grid.four{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+
+/* iPad landscape and similar tablets */
+@media (min-width:701px) and (max-width:1200px){
+  main{
+    max-width:none;
+    padding:14px 18px;
+  }
+
+  .form-grid.four{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  .form-grid.two{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+
+  #itemForm{
+    padding:22px;
+  }
+
+  .form-heading{
+    align-items:center;
+  }
+
+  .profit-preview{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+}
+
+/* Phones and narrow portrait layouts */
+@media (max-width:700px){
+  .form-grid.four,
+  .form-grid.two{
+    grid-template-columns:1fr;
+  }
+
+  #itemForm{
+    padding:15px;
+  }
+
+  #itemForm .form-heading{
+    display:block;
+  }
+
+  #itemForm .form-heading .actions{
+    margin-top:12px;
+  }
+
+  #itemForm .form-heading .actions button{
+    flex:1 1 140px;
+  }
+
+  .profit-preview{
+    grid-template-columns:1fr;
+  }
+}
