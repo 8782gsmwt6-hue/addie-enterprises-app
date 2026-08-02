@@ -158,7 +158,7 @@ function renderMetrics() {
   const actualProfit = sold.reduce((s,i) => s + calculation(i).profit, 0);
   const combinedProfit = projectedProfit + actualProfit;
   const combinedRoi = invested > 0 ? combinedProfit / invested : 0;
-  const heldValues = unsoldItems.map(daysHeld).filter(value => value !== null);
+  const heldValues = unsold.map(daysHeld).filter(value => value !== null);
   const averageDaysHeld = heldValues.length
     ? Math.round(heldValues.reduce((sum, value) => sum + value, 0) / heldValues.length)
     : 0;
