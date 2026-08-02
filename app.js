@@ -305,16 +305,6 @@ $("authForm").addEventListener("submit", async event => {
   }
 });
 
-$("createAccountBtn").onclick = async () => {
-  $("authMessage").className = "message";
-  $("authMessage").textContent = "Creating account…";
-  try {
-    await createUserWithEmailAndPassword(auth, $("authEmail").value.trim(), $("authPassword").value);
-  } catch (error) {
-    $("authMessage").className = "message error";
-    $("authMessage").textContent = friendlyError(error);
-  }
-};
 
 $("signOutBtn").onclick = $("settingsSignOutBtn").onclick = () => signOut(auth);
 $("itemForm").addEventListener("submit", saveItem);
