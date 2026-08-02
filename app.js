@@ -182,8 +182,11 @@ function renderDashboardRows() {
   $("dashboardRows").innerHTML = items.length ? items.map(i => {
     const c = calculation(i);
     return `<tr>
-      <td><strong>${escapeHtml(i.brand)} ${escapeHtml(i.itemName)}</strong></td>
-      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(i.status || "In Inventory")}</span></td>
+      <td>
+        <strong>${i.favorite ? "⭐ " : ""}${escapeHtml(i.brand)} ${escapeHtml(i.itemName)}</strong>
+        <span class="muted">${escapeHtml(i.inventoryNumber || "")}</span>
+      </td>
+      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(normalizedStatus(i.status))}</span></td>
       <td>${c.type}</td><td>${c.basis}: ${money(c.revenue)}</td>
       <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</td>
       <td>${pct(c.roi)}</td>
@@ -195,7 +198,7 @@ function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
   const filtered = items.filter(i => {
-    const haystack = `${i.brand} ${i.itemName} ${i.purchaseSource} ${i.notes}`.toLowerCase();
+    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.colorMaterial || ""} ${i.authentication || ""} ${i.purchaseSource} ${i.notes}`.toLowerCase();
     return (!term || haystack.includes(term)) && (!status || i.status === status);
   });
 
@@ -231,15 +234,27 @@ function renderItems() {
   $("emptyItems").hidden = filtered.length > 0;
   $("itemRows").innerHTML = filtered.map(i => {
     const c = calculation(i);
+    const rating = buyRating(i);
+    const held = daysHeld(i);
     const updated = i.updatedAt?.toDate ? i.updatedAt.toDate().toLocaleString() : "Syncing…";
     return `<tr>
-      <td><strong>${escapeHtml(i.brand)}</strong><span class="muted">${escapeHtml(i.itemName)}</span></td>
+      <td>
+        <div class="item-title-line">
+          <strong>${i.favorite ? "⭐ " : ""}${escapeHtml(i.brand)}</strong>
+          <span class="inventory-number">${escapeHtml(i.inventoryNumber || "Unnumbered")}</span>
+        </div>
+        <span class="muted">${escapeHtml(i.itemName)}</span>
+        <span class="muted">${held === null ? "" : `${held} day${held === 1 ? "" : "s"} held`}</span>
+      </td>
       <td>${money(i.purchasePrice)}<span class="muted">${escapeHtml(i.purchaseDate || "")}</span></td>
       <td>${money(i.listingPrice)}<span class="muted">${escapeHtml(i.listingPlatform || "")}</span></td>
       <td>${number(i.salePrice) ? money(i.salePrice) : "—"}<span class="muted">${escapeHtml(i.saleDate || "")}</span></td>
-      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}<span class="muted">${c.type}</span></td>
+      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}
+        <span class="muted">${c.type}</span>
+        <span class="profit-rating ${rating.className}">${rating.label}</span>
+      </td>
       <td>${pct(c.roi)}</td>
-      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(i.status)}</span></td>
+      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(normalizedStatus(i.status))}</span></td>
       <td class="muted">${updated}</td>
       <td><div class="row-actions"><button class="secondary edit-btn" data-id="${i.id}">Edit</button><button class="danger delete-btn" data-id="${i.id}">Delete</button></div></td>
     </tr>`;
@@ -268,7 +283,7 @@ function previewProfit() {
 }
 
 function readForm() {
-  const fields = ["brand","itemName","category","status","colorMaterial","condition","accessories","authentication",
+  const fields = ["inventoryNumber","favorite","brand","itemName","category","status","colorMaterial","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","expectedSellingPrice",
     "recommendedMaxBuy","marketConfidence","listingDate","listingPlatform","listingPrice","salePrice","saleDate",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
@@ -276,9 +291,14 @@ function readForm() {
 }
 
 function setForm(i = {}) {
-  const defaults = {category:"Handbag",status:"In Inventory",condition:"Excellent",authentication:"Not authenticated",
+  const defaults = {category:"Handbag",status:"Purchased",favorite:"false",condition:"Excellent",authentication:"Not authenticated",
     targetProfit:"25",marketConfidence:"Medium",shippingCosts:"0",buyerPaidShipping:"0"};
-  const values = {...defaults, ...i};
+  const values = {
+    ...defaults,
+    ...i,
+    status: normalizedStatus(i.status || defaults.status),
+    favorite: i.favorite === true ? "true" : "false"
+  };
   Object.keys(values).forEach(k => { if ($(k)) $(k).value = values[k] ?? ""; });
   $("editId").value = i.id || "";
   $("formTitle").textContent = i.id ? "Edit Item" : "Add Item";
@@ -304,6 +324,8 @@ async function saveItem(event) {
   if (number(data.salePrice) > 0) data.status = "Sold";
   data.favorite = String(data.favorite) === "true";
   data.status = normalizedStatus(data.status);
+  data.favorite = String(data.favorite) === "true";
+  data.status = normalizedStatus(data.status);
   data.purchasePrice = number(data.purchasePrice);
   data.targetProfit = number(data.targetProfit);
   data.expectedSellingPrice = number(data.expectedSellingPrice);
@@ -322,6 +344,12 @@ async function saveItem(event) {
     const id = $("editId").value;
     if (id) await updateDoc(doc(db, "Workspaces", WORKSPACE_ID, "items", id), data);
     else {
+      const nextSequence = items.reduce((highest, item) => {
+        const match = String(item.inventoryNumber || "").match(/AE-(\d+)/i);
+        return match ? Math.max(highest, Number(match[1])) : highest;
+      }, 0) + 1;
+
+      data.inventoryNumber = `AE-${String(nextSequence).padStart(4, "0")}`;
       data.createdAt = serverTimestamp();
       data.createdBy = auth.currentUser.email;
       await addDoc(itemCollection(), data);

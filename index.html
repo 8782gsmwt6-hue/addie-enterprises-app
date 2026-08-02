@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.1.1" />
+  <link rel="stylesheet" href="styles.css?v=4.1.2" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -127,10 +127,36 @@
 
           <div class="section-title">Item Details</div>
           <div class="form-grid four">
+            <div>
+              <label>Inventory Number</label>
+              <input id="inventoryNumber" readonly placeholder="Assigned automatically when saved" />
+            </div>
+            <div>
+              <label>Favorite / Priority</label>
+              <select id="favorite">
+                <option value="false">No</option>
+                <option value="true">Yes ⭐</option>
+              </select>
+            </div>
             <div><label>Brand *</label><input id="brand" required placeholder="Louis Vuitton" /></div>
             <div><label>Item / Model *</label><input id="itemName" required placeholder="Neverfull MM Monogram" /></div>
             <div><label>Category</label><select id="category"><option>Handbag</option><option>Wallet</option><option>Accessory</option><option>Luggage</option><option>Clothing</option><option>Shoes</option><option>Other</option></select></div>
-            <div><label>Status</label><select id="status"><option>In Inventory</option><option>Listed</option><option>Sold</option><option>Returned</option><option>Keep / Personal</option></select></div>
+            <div>
+              <label>Status</label>
+              <select id="status">
+                <option>Purchased</option>
+                <option>Cleaning</option>
+                <option>Authentication</option>
+                <option>Ready to List</option>
+                <option>Listed</option>
+                <option>Offer Received</option>
+                <option>Sold</option>
+                <option>Shipped</option>
+                <option>Completed</option>
+                <option>Returned</option>
+                <option>Keep / Personal</option>
+              </select>
+            </div>
             <div><label>Color / Material</label><input id="colorMaterial" placeholder="Brown monogram canvas" /></div>
             <div><label>Condition</label><select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
             <div><label>Accessories</label><input id="accessories" placeholder="Dust bag, box, strap" /></div>
@@ -223,6 +249,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.1.1"></script>
+<script type="module" src="app.js?v=4.1.2"></script>
 </body>
 </html>
