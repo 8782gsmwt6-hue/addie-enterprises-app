@@ -270,8 +270,105 @@ function renderAll() {
   renderItems();
 }
 
+
+function maximumBuyPrice(item) {
+  const targetRoi = Math.max(0, number(item.targetProfit) / 100);
+  const revenue = number(item.listingPrice) > 0
+    ? number(item.listingPrice)
+    : number(item.expectedSellingPrice);
+
+  const platform = item.listingPlatform || item.expectedPlatform || "";
+  const feeRate = number(estimatedFeeRates[platform]);
+  const estimatedFees = revenue * feeRate;
+  const sellingCosts = number(item.shippingCosts);
+  const buyerShipping = number(item.buyerPaidShipping);
+
+  const availableBeforePurchase =
+    revenue +
+    buyerShipping -
+    estimatedFees -
+    sellingCosts;
+
+  return targetRoi >= 0
+    ? availableBeforePurchase / (1 + targetRoi)
+    : 0;
+}
+
+function dealAnalysis(item) {
+  const result = calculation(item);
+  const maxBuy = maximumBuyPrice(item);
+  const purchase = number(item.purchasePrice);
+  const targetRoi = number(item.targetProfit) / 100;
+  const revenueEntered = result.revenue > 0;
+
+  let recommendation = "Enter pricing details";
+  let reason = "Add an expected or listing price, platform, purchase price, and target ROI.";
+  let state = "neutral";
+
+  if (revenueEntered && purchase > 0) {
+    if (purchase <= maxBuy * 0.90 && result.roi >= Math.max(targetRoi, 0.25)) {
+      recommendation = "BUY";
+      reason = `Strong margin. Purchase price is ${money(Math.max(0, maxBuy - purchase))} below the maximum buy price.`;
+      state = "buy";
+    } else if (purchase <= maxBuy && result.roi >= Math.max(targetRoi * 0.80, 0.10)) {
+      recommendation = "NEGOTIATE";
+      reason = `The deal is close. Stay at or below ${money(maxBuy)} to protect the target ROI.`;
+      state = "negotiate";
+    } else {
+      recommendation = "PASS";
+      reason = `Current purchase price is too high for the target return. Maximum recommended buy is ${money(maxBuy)}.`;
+      state = "pass";
+    }
+  }
+
+  const marginScore = Math.max(0, Math.min(45, result.roi * 100));
+  const profitScore = Math.max(0, Math.min(35, result.profit / 10));
+  const confidenceMap = { High: 20, Medium: 12, Low: 5 };
+  const confidenceScore = confidenceMap[item.marketConfidence] ?? 12;
+  const score = revenueEntered && purchase > 0
+    ? Math.round(Math.min(100, marginScore + profitScore + confidenceScore))
+    : null;
+
+  return {
+    ...result,
+    maxBuy,
+    recommendation,
+    reason,
+    state,
+    score
+  };
+}
+
+function renderDealAnalyzer() {
+  const item = readForm();
+  const analysis = dealAnalysis(item);
+  const card = $("dealAnalyzerCard");
+
+  if (!card) return;
+
+  card.classList.remove("deal-buy", "deal-negotiate", "deal-pass", "deal-neutral");
+  card.classList.add(`deal-${analysis.state}`);
+
+  $("dealRecommendation").textContent = analysis.recommendation;
+  $("dealReason").textContent = analysis.reason;
+  $("dealScore").textContent = analysis.score === null ? "—" : `${analysis.score}/100`;
+  $("dealRevenue").textContent = money(analysis.revenue);
+  $("dealFees").textContent = money(analysis.fee);
+  $("dealCosts").textContent = money(number(item.shippingCosts));
+  $("dealMaxBuy").textContent = money(analysis.maxBuy);
+  $("dealProfit").textContent = money(analysis.profit);
+  $("dealRoi").textContent = pct(analysis.roi);
+
+  if ($("recommendedMaxBuy")) {
+    $("recommendedMaxBuy").value = analysis.maxBuy > 0
+      ? analysis.maxBuy.toFixed(2)
+      : "";
+  }
+}
+
 function previewProfit() {
   const draft = readForm();
+  renderDealAnalyzer();
   const c = calculation(draft);
   $("profitPreview").classList.toggle("actual", c.saleEntered);
   $("profitPreview").innerHTML = `
@@ -283,7 +380,7 @@ function previewProfit() {
 }
 
 function readForm() {
-  const fields = ["inventoryNumber","favorite","brand","itemName","category","status","colorMaterial","condition","accessories","authentication",
+  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","category","status","colorMaterial","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","expectedSellingPrice",
     "recommendedMaxBuy","marketConfidence","listingDate","listingPlatform","listingPrice","salePrice","saleDate",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
@@ -320,6 +417,10 @@ async function saveItem(event) {
     button.textContent = "Saving…";
   });
   const data = readForm();
+
+  if (data.brand === "Other" && data.customBrand.trim()) {
+    data.brand = data.customBrand.trim();
+  }
   if (!data.brand.trim() || !data.itemName.trim() || number(data.purchasePrice) < 0) return;
   if (number(data.salePrice) > 0) data.status = "Sold";
   data.favorite = String(data.favorite) === "true";
@@ -438,3 +539,4 @@ window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecti
 window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
 
 populatePlatforms();
+renderDealAnalyzer();

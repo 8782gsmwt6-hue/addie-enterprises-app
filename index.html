@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.1.3" />
+  <link rel="stylesheet" href="styles.css?v=4.2.0" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -138,7 +138,106 @@
                 <option value="true">Yes ⭐</option>
               </select>
             </div>
-            <div><label>Brand *</label><input id="brand" required placeholder="Louis Vuitton" /></div>
+            <div>
+              <label>Brand *</label>
+              <select id="brand" required>
+                <option value="">Select brand</option>
+                <option value="A.L.C.">A.L.C.</option>
+                <option value="A.P.C.">A.P.C.</option>
+                <option value="Alexander McQueen">Alexander McQueen</option>
+                <option value="Alexander Wang">Alexander Wang</option>
+                <option value="Alaïa">Alaïa</option>
+                <option value="Anya Hindmarch">Anya Hindmarch</option>
+                <option value="Balenciaga">Balenciaga</option>
+                <option value="Bally">Bally</option>
+                <option value="Bao Bao Issey Miyake">Bao Bao Issey Miyake</option>
+                <option value="Bottega Veneta">Bottega Veneta</option>
+                <option value="Brahmin">Brahmin</option>
+                <option value="Brandon Blackwood">Brandon Blackwood</option>
+                <option value="Brunello Cucinelli">Brunello Cucinelli</option>
+                <option value="Burberry">Burberry</option>
+                <option value="BVLGARI">BVLGARI</option>
+                <option value="By Far">By Far</option>
+                <option value="Celine">Celine</option>
+                <option value="Chanel">Chanel</option>
+                <option value="Chloé">Chloé</option>
+                <option value="Christian Dior">Christian Dior</option>
+                <option value="Christian Louboutin">Christian Louboutin</option>
+                <option value="Coach">Coach</option>
+                <option value="Comme des Garçons">Comme des Garçons</option>
+                <option value="Coperni">Coperni</option>
+                <option value="Cult Gaia">Cult Gaia</option>
+                <option value="Delvaux">Delvaux</option>
+                <option value="Dooney & Bourke">Dooney & Bourke</option>
+                <option value="Etro">Etro</option>
+                <option value="Fendi">Fendi</option>
+                <option value="Ferragamo">Ferragamo</option>
+                <option value="Fleuron">Fleuron</option>
+                <option value="Fossil">Fossil</option>
+                <option value="Furla">Furla</option>
+                <option value="Ganni">Ganni</option>
+                <option value="Givenchy">Givenchy</option>
+                <option value="Goyard">Goyard</option>
+                <option value="Gucci">Gucci</option>
+                <option value="Hermès">Hermès</option>
+                <option value="Isabel Marant">Isabel Marant</option>
+                <option value="Jacquemus">Jacquemus</option>
+                <option value="Jil Sander">Jil Sander</option>
+                <option value="Jimmy Choo">Jimmy Choo</option>
+                <option value="Judith Leiber">Judith Leiber</option>
+                <option value="Kate Spade">Kate Spade</option>
+                <option value="Khaite">Khaite</option>
+                <option value="Kurt Geiger">Kurt Geiger</option>
+                <option value="Lancel">Lancel</option>
+                <option value="Loewe">Loewe</option>
+                <option value="Longchamp">Longchamp</option>
+                <option value="Louis Vuitton">Louis Vuitton</option>
+                <option value="Mansur Gavriel">Mansur Gavriel</option>
+                <option value="Marc Jacobs">Marc Jacobs</option>
+                <option value="Marni">Marni</option>
+                <option value="MCM">MCM</option>
+                <option value="Michael Kors">Michael Kors</option>
+                <option value="Miu Miu">Miu Miu</option>
+                <option value="Moncler">Moncler</option>
+                <option value="Montblanc">Montblanc</option>
+                <option value="Moschino">Moschino</option>
+                <option value="Mulberry">Mulberry</option>
+                <option value="Nancy Gonzalez">Nancy Gonzalez</option>
+                <option value="Off-White">Off-White</option>
+                <option value="Oscar de la Renta">Oscar de la Renta</option>
+                <option value="Patricia Nash">Patricia Nash</option>
+                <option value="Polène">Polène</option>
+                <option value="Prada">Prada</option>
+                <option value="Proenza Schouler">Proenza Schouler</option>
+                <option value="Ralph Lauren">Ralph Lauren</option>
+                <option value="Rebecca Minkoff">Rebecca Minkoff</option>
+                <option value="Rejina Pyo">Rejina Pyo</option>
+                <option value="Rimowa">Rimowa</option>
+                <option value="Saint Laurent">Saint Laurent</option>
+                <option value="Salvatore Ferragamo">Salvatore Ferragamo</option>
+                <option value="Senreve">Senreve</option>
+                <option value="Staud">Staud</option>
+                <option value="Stella McCartney">Stella McCartney</option>
+                <option value="Strathberry">Strathberry</option>
+                <option value="Telfar">Telfar</option>
+                <option value="The Row">The Row</option>
+                <option value="Thom Browne">Thom Browne</option>
+                <option value="Tiffany & Co.">Tiffany & Co.</option>
+                <option value="Tod's">Tod's</option>
+                <option value="Tom Ford">Tom Ford</option>
+                <option value="Tory Burch">Tory Burch</option>
+                <option value="Valentino">Valentino</option>
+                <option value="Valextra">Valextra</option>
+                <option value="Versace">Versace</option>
+                <option value="Victoria Beckham">Victoria Beckham</option>
+                <option value="Wandler">Wandler</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div id="customBrandWrap" hidden>
+              <label>Other Brand</label>
+              <input id="customBrand" placeholder="Enter brand name" />
+            </div>
             <div><label>Item / Model *</label><input id="itemName" required placeholder="Neverfull MM Monogram" /></div>
             <div><label>Category</label><select id="category"><option>Handbag</option><option>Wallet</option><option>Accessory</option><option>Luggage</option><option>Clothing</option><option>Shoes</option><option>Other</option></select></div>
             <div>
@@ -249,6 +348,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.1.3"></script>
+<script type="module" src="app.js?v=4.2.0"></script>
 </body>
 </html>
