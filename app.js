@@ -34,6 +34,45 @@ const number = v => Number(v || 0);
 const money = v => new Intl.NumberFormat("en-US", {style:"currency", currency:"USD"}).format(number(v));
 const pct = v => `${(number(v) * 100).toFixed(1)}%`;
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+
+const dateFromValue = value => {
+  if (!value) return null;
+  const date = value?.toDate ? value.toDate() : new Date(`${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const daysHeld = item => {
+  const start = dateFromValue(item.purchaseDate) || (item.createdAt?.toDate ? item.createdAt.toDate() : null);
+  if (!start) return null;
+
+  const end = number(item.salePrice) > 0
+    ? (dateFromValue(item.saleDate) || new Date())
+    : new Date();
+
+  return Math.max(0, Math.floor((end - start) / 86400000));
+};
+
+const buyRating = item => {
+  const result = calculation(item);
+  const target = number(item.targetProfit) / 100;
+  const roi = result.roi;
+
+  if (roi >= Math.max(target, 0.30)) {
+    return { label: "Excellent", className: "rating-green" };
+  }
+
+  if (roi >= Math.max(target * 0.75, 0.15)) {
+    return { label: "Acceptable", className: "rating-yellow" };
+  }
+
+  return { label: "Low Margin", className: "rating-red" };
+};
+
+const normalizedStatus = value => {
+  if (!value || value === "In Inventory") return "Purchased";
+  return value;
+};
+
 const itemCollection = () => collection(db, "Workspaces", WORKSPACE_ID, "items");
 
 
@@ -119,6 +158,11 @@ function renderMetrics() {
   const actualProfit = sold.reduce((s,i) => s + calculation(i).profit, 0);
   const combinedProfit = projectedProfit + actualProfit;
   const combinedRoi = invested > 0 ? combinedProfit / invested : 0;
+  const heldValues = unsoldItems.map(daysHeld).filter(value => value !== null);
+  const averageDaysHeld = heldValues.length
+    ? Math.round(heldValues.reduce((sum, value) => sum + value, 0) / heldValues.length)
+    : 0;
+  const favoriteCount = items.filter(item => item.favorite === true).length;
 
   const data = [
     ["Items", items.length, "All tracked inventory"],
@@ -127,7 +171,9 @@ function renderMetrics() {
     ["Projected Profit", money(projectedProfit), "Listing price, or expected price if not listed"],
     ["Actual Profit", money(actualProfit), "Completed sales"],
     ["Combined Profit", money(combinedProfit), "Projected + actual"],
-    ["Combined ROI", pct(combinedRoi), "Based on purchase cost"]
+    ["Combined ROI", pct(combinedRoi), "Based on purchase cost"],
+    ["Average Days Held", averageDaysHeld, "Unsold inventory"],
+    ["Favorites", favoriteCount, "High-priority items"]
   ];
   $("metrics").innerHTML = data.map(([label,value,sub]) => `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`).join("");
 }
@@ -151,6 +197,35 @@ function renderItems() {
   const filtered = items.filter(i => {
     const haystack = `${i.brand} ${i.itemName} ${i.purchaseSource} ${i.notes}`.toLowerCase();
     return (!term || haystack.includes(term)) && (!status || i.status === status);
+  });
+
+
+  const sortMode = $("sortFilter")?.value || "updated-desc";
+
+  filtered.sort((a, b) => {
+    if (Boolean(b.favorite) !== Boolean(a.favorite)) {
+      return Number(Boolean(b.favorite)) - Number(Boolean(a.favorite));
+    }
+
+    const aCalc = calculation(a);
+    const bCalc = calculation(b);
+
+    switch (sortMode) {
+      case "purchase-desc":
+        return String(b.purchaseDate || "").localeCompare(String(a.purchaseDate || ""));
+      case "purchase-asc":
+        return String(a.purchaseDate || "").localeCompare(String(b.purchaseDate || ""));
+      case "profit-desc":
+        return bCalc.profit - aCalc.profit;
+      case "profit-asc":
+        return aCalc.profit - bCalc.profit;
+      case "brand-asc":
+        return String(a.brand || "").localeCompare(String(b.brand || ""));
+      case "status-asc":
+        return normalizedStatus(a.status).localeCompare(normalizedStatus(b.status));
+      default:
+        return 0;
+    }
   });
 
   $("emptyItems").hidden = filtered.length > 0;
@@ -227,6 +302,8 @@ async function saveItem(event) {
   const data = readForm();
   if (!data.brand.trim() || !data.itemName.trim() || number(data.purchasePrice) < 0) return;
   if (number(data.salePrice) > 0) data.status = "Sold";
+  data.favorite = String(data.favorite) === "true";
+  data.status = normalizedStatus(data.status);
   data.purchasePrice = number(data.purchasePrice);
   data.targetProfit = number(data.targetProfit);
   data.expectedSellingPrice = number(data.expectedSellingPrice);
@@ -324,6 +401,7 @@ $("newItemBtn").onclick = () => { setForm(); showTab("add"); };
 $("deleteCurrentBtn").onclick = () => removeItem($("editId").value);
 $("searchInput").addEventListener("input", renderItems);
 $("statusFilter").addEventListener("change", renderItems);
+if ($("sortFilter")) $("sortFilter").addEventListener("change", renderItems);
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 ["purchasePrice","expectedSellingPrice","listingPrice","salePrice","actualPlatformFee","shippingCosts","buyerPaidShipping","expectedPlatform","listingPlatform"]
   .forEach(id => $(id).addEventListener("input", previewProfit));

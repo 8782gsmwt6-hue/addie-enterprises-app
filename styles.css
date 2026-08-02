@@ -84,3 +84,64 @@ button:disabled{opacity:.6;cursor:not-allowed}
   font-weight:700;
   line-height:1.4;
 }
+
+
+.item-title-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  justify-content:space-between;
+}
+
+.inventory-number{
+  display:inline-flex;
+  padding:3px 7px;
+  border-radius:999px;
+  background:#eef2f6;
+  color:#475569;
+  font-size:.72rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.profit-rating{
+  display:inline-flex;
+  width:max-content;
+  margin-top:5px;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:.7rem;
+  font-weight:900;
+}
+
+.rating-green{
+  background:#dff5e8;
+  color:#0f7a45;
+}
+
+.rating-yellow{
+  background:#fff3cd;
+  color:#8a6500;
+}
+
+.rating-red{
+  background:#fee5e2;
+  color:#b42318;
+}
+
+#sortFilter{
+  min-width:170px;
+}
+
+@media(max-width:750px){
+  .toolbar{
+    grid-template-columns:1fr;
+  }
+
+  #sortFilter,
+  #statusFilter,
+  #searchInput,
+  #newItemBtn{
+    width:100%;
+  }
+}
