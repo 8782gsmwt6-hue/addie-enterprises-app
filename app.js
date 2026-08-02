@@ -9,6 +9,12 @@ import {
   onSnapshot, serverTimestamp, query, orderBy, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
+const authMessageAtStartup = document.getElementById("authMessage");
+if (authMessageAtStartup) {
+  authMessageAtStartup.className = "message";
+  authMessageAtStartup.textContent = "App loaded. Ready to sign in.";
+}
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -282,4 +288,3 @@ window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecti
 window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
 
 populatePlatforms();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(console.error);

@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=4.0.1" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -181,6 +181,35 @@
     </main>
   </div>
 
-  <script type="module" src="app.js"></script>
+  <script>
+  window.addEventListener("error", function (event) {
+    const box = document.getElementById("authMessage");
+    if (box) {
+      box.className = "message error";
+      box.textContent = "App script error: " + (event.message || "unknown error");
+    }
+  });
+
+  window.addEventListener("unhandledrejection", function (event) {
+    const box = document.getElementById("authMessage");
+    if (box) {
+      box.className = "message error";
+      box.textContent = "App loading error: " + (event.reason?.message || event.reason || "unknown error");
+    }
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => registration.unregister());
+    });
+
+    if ("caches" in window) {
+      caches.keys().then(keys => {
+        keys.forEach(key => caches.delete(key));
+      });
+    }
+  }
+</script>
+<script type="module" src="app.js?v=4.0.1"></script>
 </body>
 </html>

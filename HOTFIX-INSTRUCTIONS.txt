@@ -1,0 +1,13 @@
+ADDIE ENTERPRISES v4.0.1 HOTFIX
+
+1. Upload every file in this ZIP to the ROOT of your GitHub repository.
+2. Replace files with the same names.
+3. Commit with:
+   v4.0.1 - Fix sign-in script loading and Safari cache
+4. Wait 2-3 minutes for GitHub Pages.
+5. Open the site in a NEW Private Safari tab.
+6. You should see:
+   App loaded. Ready to sign in.
+7. Enter your email and password and tap Sign In.
+
+If you do not see the startup message, GitHub Pages has not deployed the new index.html/app.js yet.
