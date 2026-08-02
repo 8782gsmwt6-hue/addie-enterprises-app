@@ -368,7 +368,6 @@ function renderDealAnalyzer() {
 
 function previewProfit() {
   const draft = readForm();
-  renderDealAnalyzer();
   const c = calculation(draft);
   $("profitPreview").classList.toggle("actual", c.saleEntered);
   $("profitPreview").innerHTML = `
@@ -377,6 +376,7 @@ function previewProfit() {
     <div class="preview-cell"><div class="k">${c.saleEntered ? "Actual" : "Estimated"} Fees</div><div class="v">${money(c.fee)}</div></div>
     <div class="preview-cell"><div class="k">Profit</div><div class="v ${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</div></div>
     <div class="preview-cell"><div class="k">ROI</div><div class="v">${pct(c.roi)}</div></div>`;
+  renderDealAnalyzer();
 }
 
 function readForm() {
@@ -539,4 +539,4 @@ window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecti
 window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
 
 populatePlatforms();
-renderDealAnalyzer();
+previewProfit();

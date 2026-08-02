@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.2.0" />
+  <link rel="stylesheet" href="styles.css?v=4.2.1" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -274,6 +274,58 @@
             <div><label>Market Confidence</label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
           </div>
 
+
+          <section class="deal-analyzer-card deal-neutral" id="dealAnalyzerCard">
+            <div class="deal-meter-header">
+              <div>
+                <div class="eyebrow">LIVE DEAL ANALYZER</div>
+                <h3 id="dealRecommendation">Enter pricing details</h3>
+                <p id="dealReason">
+                  Enter a purchase price, expected or listing price, platform, and target ROI.
+                </p>
+              </div>
+
+              <div class="deal-score-wrap">
+                <span class="deal-score-label">Opportunity Score</span>
+                <strong id="dealScore">—</strong>
+              </div>
+            </div>
+
+            <div class="deal-primary-results">
+              <div class="deal-hero-result">
+                <span>Maximum Recommended Buy</span>
+                <strong id="dealMaxBuy">$0.00</strong>
+              </div>
+
+              <div class="deal-hero-result">
+                <span>Projected Profit</span>
+                <strong id="dealProfit">$0.00</strong>
+              </div>
+
+              <div class="deal-hero-result">
+                <span>Projected ROI</span>
+                <strong id="dealRoi">0.0%</strong>
+              </div>
+            </div>
+
+            <div class="deal-breakdown">
+              <div>
+                <span>Revenue Basis</span>
+                <strong id="dealRevenue">$0.00</strong>
+              </div>
+
+              <div>
+                <span>Estimated Platform Fees</span>
+                <strong id="dealFees">$0.00</strong>
+              </div>
+
+              <div>
+                <span>Shipping / Selling Costs</span>
+                <strong id="dealCosts">$0.00</strong>
+              </div>
+            </div>
+          </section>
+
           <div class="section-title">Listing and Actual Sale</div>
           <div class="form-grid four">
             <div><label>Listing Date</label><input id="listingDate" type="date" /></div>
@@ -348,6 +400,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.2.0"></script>
+<script type="module" src="app.js?v=4.2.1"></script>
 </body>
 </html>
