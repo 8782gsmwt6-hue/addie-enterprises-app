@@ -68,6 +68,15 @@ function friendlyError(error) {
   return message;
 }
 
+
+function showSyncDetail(message = "") {
+  const detail = $("syncDetail");
+  if (!detail) return;
+
+  detail.textContent = message;
+  detail.hidden = !message;
+}
+
 function populatePlatforms() {
   ["expectedPlatform", "listingPlatform"].forEach(id => {
     $(id).innerHTML = platforms.map(p => `<option value="${p}">${p || "Select platform"}</option>`).join("");
@@ -267,6 +276,7 @@ async function removeItem(id) {
 function startItemSync() {
   if (unsubscribeItems) unsubscribeItems();
   setSyncState("syncing", "Syncing…");
+  showSyncDetail("");
   const q = query(itemCollection(), orderBy("updatedAt", "desc"));
   unsubscribeItems = onSnapshot(q, snapshot => {
     items = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
@@ -274,6 +284,7 @@ function startItemSync() {
     renderAll();
   }, error => {
     setSyncState("error", "Sync error");
+      showSyncDetail(`Firestore sync failed: ${friendlyError(error)}`);
     console.error(error);
   });
 }

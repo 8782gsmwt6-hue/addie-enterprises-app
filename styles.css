@@ -1,3 +1,4 @@
+[hidden]{display:none!important}
 
 :root{
   --navy:#17283d;--navy2:#243b55;--gold:#b58a50;--cream:#f5f1ea;--card:#fff;
@@ -71,4 +72,15 @@ button:disabled{opacity:.6;cursor:not-allowed}
   .auth-card h1{font-size:1.7rem}
   .auth-card input{min-height:48px}
   .primary.wide{min-height:50px}
+}
+
+.sync-detail{
+  margin-top:8px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#fee5e2;
+  color:#b42318;
+  font-size:.82rem;
+  font-weight:700;
+  line-height:1.4;
 }

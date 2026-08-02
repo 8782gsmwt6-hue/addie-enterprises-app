@@ -1,5 +1,4 @@
 self.addEventListener("install", event => self.skipWaiting());
-
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys()
@@ -7,5 +6,4 @@ self.addEventListener("activate", event => {
       .then(() => self.clients.claim())
   );
 });
-
 self.addEventListener("fetch", () => {});
