@@ -59,3 +59,16 @@ td strong{display:block}.muted{color:var(--muted);font-size:.77rem}
   main{padding:10px}.card{padding:13px}.form-grid.four,.form-grid.two{grid-template-columns:1fr}
   .form-heading{display:block}.form-heading .actions{margin-top:10px}.toolbar{grid-template-columns:1fr}.profit-preview{grid-template-columns:1fr 1fr}
 }
+
+.sync-badge[data-state="synced"]{background:#dff5e8;color:#0f7a45}
+.sync-badge[data-state="syncing"]{background:#fff3cd;color:#8a6500}
+.sync-badge[data-state="error"]{background:#fee5e2;color:#b42318}
+.sync-badge[data-state="offline"]{background:#e5e7eb;color:#4b5563}
+button:disabled{opacity:.6;cursor:not-allowed}
+#authMessage:empty{display:none}
+@media(max-width:650px){
+  .auth-card{padding:22px 18px}
+  .auth-card h1{font-size:1.7rem}
+  .auth-card input{min-height:48px}
+  .primary.wide{min-height:50px}
+}

@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.0.1" />
+  <link rel="stylesheet" href="styles.css?v=4.0.2" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -21,14 +21,12 @@
 
       <form id="authForm">
         <label>Email</label>
-        <input id="authEmail" type="email" autocomplete="email" required placeholder="name@example.com" />
+        <input id="authEmail" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="name@example.com" />
         <label>Password</label>
-        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Minimum 6 characters" />
+        <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Password" />
         <button class="primary wide" type="submit" id="signInBtn">Sign In</button>
       </form>
-
-      <button class="secondary wide" id="createAccountBtn">Create Account</button>
-      <p class="small">All approved users share the same Addie Enterprises inventory. Firebase Authentication protects access.</p>
+<p class="small">Only approved Addie Enterprises users can sign in. Contact the administrator if you need access.</p>
       <div id="authMessage" class="message" aria-live="polite"></div>
     </section>
   </div>
@@ -210,6 +208,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.0.1"></script>
+<script type="module" src="app.js?v=4.0.2"></script>
 </body>
 </html>

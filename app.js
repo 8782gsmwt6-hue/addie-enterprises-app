@@ -1,8 +1,7 @@
 import { firebaseConfig, WORKSPACE_ID } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {
   getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
@@ -29,12 +28,45 @@ const estimatedFeeRates = {
 
 let items = [];
 let unsubscribeItems = null;
+let saveInProgress = false;
 const $ = id => document.getElementById(id);
 const number = v => Number(v || 0);
 const money = v => new Intl.NumberFormat("en-US", {style:"currency", currency:"USD"}).format(number(v));
 const pct = v => `${(number(v) * 100).toFixed(1)}%`;
 const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
 const itemCollection = () => collection(db, "Workspaces", WORKSPACE_ID, "items");
+
+
+function setSyncState(state, text) {
+  const badge = $("syncBadge");
+  if (!badge) return;
+
+  badge.textContent = text;
+  badge.dataset.state = state;
+}
+
+function friendlyError(error) {
+  const code = error?.code || "";
+  const message = error?.message || "Something went wrong.";
+
+  if (code.includes("auth/invalid-credential")) {
+    return "The email or password is incorrect.";
+  }
+
+  if (code.includes("auth/too-many-requests")) {
+    return "Too many sign-in attempts. Wait a few minutes and try again.";
+  }
+
+  if (code.includes("permission-denied")) {
+    return "Firebase blocked this action. Check the Firestore security rules.";
+  }
+
+  if (code.includes("unavailable")) {
+    return "Firebase is temporarily unavailable. Check your internet connection.";
+  }
+
+  return message;
+}
 
 function populatePlatforms() {
   ["expectedPlatform", "listingPlatform"].forEach(id => {
@@ -173,6 +205,16 @@ function setForm(i = {}) {
 
 async function saveItem(event) {
   event.preventDefault();
+
+  if (saveInProgress) return;
+  saveInProgress = true;
+
+  const submitButtons = document.querySelectorAll('#itemForm button[type="submit"]');
+  submitButtons.forEach(button => {
+    button.disabled = true;
+    button.dataset.originalText = button.textContent;
+    button.textContent = "Saving…";
+  });
   const data = readForm();
   if (!data.brand.trim() || !data.itemName.trim() || number(data.purchasePrice) < 0) return;
   if (number(data.salePrice) > 0) data.status = "Sold";
@@ -224,14 +266,14 @@ async function removeItem(id) {
 
 function startItemSync() {
   if (unsubscribeItems) unsubscribeItems();
-  $("syncBadge").textContent = "Syncing…";
+  setSyncState("syncing", "Syncing…");
   const q = query(itemCollection(), orderBy("updatedAt", "desc"));
   unsubscribeItems = onSnapshot(q, snapshot => {
     items = snapshot.docs.map(d => ({id:d.id, ...d.data()}));
     $("syncBadge").textContent = navigator.onLine ? "Cloud synced" : "Offline";
     renderAll();
   }, error => {
-    $("syncBadge").textContent = "Sync error";
+    setSyncState("error", "Sync error");
     console.error(error);
   });
 }
@@ -241,6 +283,7 @@ onAuthStateChanged(auth, user => {
   $("appShell").hidden = !user;
   if (user) {
     $("currentUser").textContent = `Signed in as ${user.email}`;
+    setSyncState("syncing", "Connecting…");
     startItemSync();
     setForm();
   } else {
@@ -258,7 +301,7 @@ $("authForm").addEventListener("submit", async event => {
     $("authMessage").textContent = "";
   } catch (error) {
     $("authMessage").className = "message error";
-    $("authMessage").textContent = error.message;
+    $("authMessage").textContent = friendlyError(error);
   }
 });
 
@@ -269,7 +312,7 @@ $("createAccountBtn").onclick = async () => {
     await createUserWithEmailAndPassword(auth, $("authEmail").value.trim(), $("authPassword").value);
   } catch (error) {
     $("authMessage").className = "message error";
-    $("authMessage").textContent = error.message;
+    $("authMessage").textContent = friendlyError(error);
   }
 };
 
