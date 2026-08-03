@@ -408,60 +408,170 @@ async function saveItem(event) {
   event.preventDefault();
 
   if (saveInProgress) return;
+
+  const submitButtons = Array.from(
+    document.querySelectorAll('#itemForm button[type="submit"]')
+  );
+
+  const restoreSaveButtons = () => {
+    submitButtons.forEach(button => {
+      button.disabled = false;
+      button.textContent =
+        button.dataset.originalText || "Save Item";
+    });
+  };
+
   saveInProgress = true;
 
-  const submitButtons = document.querySelectorAll('#itemForm button[type="submit"]');
   submitButtons.forEach(button => {
+    button.dataset.originalText =
+      button.dataset.originalText || button.textContent;
+
     button.disabled = true;
-    button.dataset.originalText = button.textContent;
     button.textContent = "Saving…";
   });
-  const data = readForm();
-
-  if (data.brand === "Other" && data.customBrand.trim()) {
-    data.brand = data.customBrand.trim();
-  }
-  if (!data.brand.trim() || !data.itemName.trim() || number(data.purchasePrice) < 0) return;
-  if (number(data.salePrice) > 0) data.status = "Sold";
-  data.favorite = String(data.favorite) === "true";
-  data.status = normalizedStatus(data.status);
-  data.favorite = String(data.favorite) === "true";
-  data.status = normalizedStatus(data.status);
-  data.purchasePrice = number(data.purchasePrice);
-  data.targetProfit = number(data.targetProfit);
-  data.expectedSellingPrice = number(data.expectedSellingPrice);
-  data.recommendedMaxBuy = number(data.recommendedMaxBuy);
-  data.listingPrice = number(data.listingPrice);
-  data.salePrice = number(data.salePrice);
-  data.actualPlatformFee = number(data.actualPlatformFee);
-  data.shippingCosts = number(data.shippingCosts);
-  data.buyerPaidShipping = number(data.buyerPaidShipping);
-  data.updatedAt = serverTimestamp();
-  data.updatedBy = auth.currentUser.email;
 
   $("formMessage").className = "message";
   $("formMessage").textContent = "Saving…";
-  try {
-    const id = $("editId").value;
-    if (id) await updateDoc(doc(db, "Workspaces", WORKSPACE_ID, "items", id), data);
-    else {
-      const nextSequence = items.reduce((highest, item) => {
-        const match = String(item.inventoryNumber || "").match(/AE-(\d+)/i);
-        return match ? Math.max(highest, Number(match[1])) : highest;
-      }, 0) + 1;
 
-      data.inventoryNumber = `AE-${String(nextSequence).padStart(4, "0")}`;
-      data.createdAt = serverTimestamp();
-      data.createdBy = auth.currentUser.email;
-      await addDoc(itemCollection(), data);
+  try {
+    const data = readForm();
+
+    if (data.brand === "Other") {
+      data.brand = data.customBrand.trim();
     }
+
+    if (!data.brand.trim()) {
+      throw new Error("Please select or enter a brand.");
+    }
+
+    if (!data.itemName.trim()) {
+      throw new Error("Please enter an item or model name.");
+    }
+
+    if (
+      data.purchasePrice === "" ||
+      number(data.purchasePrice) < 0
+    ) {
+      throw new Error("Please enter a valid purchase price.");
+    }
+
+    if (!auth.currentUser) {
+      throw new Error("Your login session expired. Sign in again.");
+    }
+
+    if (number(data.salePrice) > 0) {
+      data.status = "Sold";
+    }
+
+    data.favorite =
+      String(data.favorite) === "true";
+
+    data.status =
+      normalizedStatus(data.status);
+
+    data.purchasePrice =
+      number(data.purchasePrice);
+
+    data.targetProfit =
+      number(data.targetProfit);
+
+    data.expectedSellingPrice =
+      number(data.expectedSellingPrice);
+
+    data.recommendedMaxBuy =
+      number(data.recommendedMaxBuy);
+
+    data.listingPrice =
+      number(data.listingPrice);
+
+    data.salePrice =
+      number(data.salePrice);
+
+    data.actualPlatformFee =
+      number(data.actualPlatformFee);
+
+    data.shippingCosts =
+      number(data.shippingCosts);
+
+    data.buyerPaidShipping =
+      number(data.buyerPaidShipping);
+
+    delete data.customBrand;
+
+    data.updatedAt = serverTimestamp();
+    data.updatedBy = auth.currentUser.email;
+
+    const saveOperation = async () => {
+      const id = $("editId").value;
+
+      if (id) {
+        await updateDoc(
+          doc(
+            db,
+            "Workspaces",
+            WORKSPACE_ID,
+            "items",
+            id
+          ),
+          data
+        );
+      } else {
+        const nextSequence =
+          items.reduce((highest, item) => {
+            const match = String(
+              item.inventoryNumber || ""
+            ).match(/AE-(\d+)/i);
+
+            return match
+              ? Math.max(highest, Number(match[1]))
+              : highest;
+          }, 0) + 1;
+
+        data.inventoryNumber =
+          `AE-${String(nextSequence).padStart(4, "0")}`;
+
+        data.createdAt = serverTimestamp();
+        data.createdBy = auth.currentUser.email;
+
+        await addDoc(itemCollection(), data);
+      }
+    };
+
+    const timeout = new Promise((_, reject) => {
+      setTimeout(
+        () =>
+          reject(
+            new Error(
+              "Firebase did not respond within 15 seconds. Check your internet connection and try again."
+            )
+          ),
+        15000
+      );
+    });
+
+    await Promise.race([
+      saveOperation(),
+      timeout
+    ]);
+
     $("formMessage").className = "message ok";
-    $("formMessage").textContent = "Saved and synced.";
+    $("formMessage").textContent =
+      "Saved and synced successfully.";
+
     setForm();
     showTab("items");
   } catch (error) {
-    $("formMessage").className = "message error";
-    $("formMessage").textContent = error.message;
+    console.error(error);
+
+    $("formMessage").className =
+      "message error";
+
+    $("formMessage").textContent =
+      friendlyError(error);
+  } finally {
+    saveInProgress = false;
+    restoreSaveButtons();
   }
 }
 
