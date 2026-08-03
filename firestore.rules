@@ -7,6 +7,11 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isConfiguredOwner() {
+      return signedIn()
+        && request.auth.token.email == 'matthewcauman@gmail.com';
+    }
+
     function memberPath() {
       return /databases/$(database)/documents/Workspaces/addie-enterprises/members/$(request.auth.uid);
     }
@@ -18,19 +23,33 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isMember()
-        && get(memberPath()).data.role in ['owner', 'admin'];
+      return isConfiguredOwner()
+        || (
+          isMember()
+          && get(memberPath()).data.role in ['owner', 'admin']
+        );
     }
 
     match /Workspaces/addie-enterprises/items/{itemId} {
-      allow read, create, update, delete: if isMember();
+      allow read, create, update, delete: if isMember() || isConfiguredOwner();
     }
 
     match /Workspaces/addie-enterprises/members/{userId} {
       allow read: if signedIn()
-        && (request.auth.uid == userId || isAdmin());
+        && (
+          request.auth.uid == userId
+          || isAdmin()
+        );
 
-      allow create, update, delete: if isAdmin();
+      // Allows the configured owner to restore their member record
+      // if Firebase issues a new UID.
+      allow create: if isAdmin()
+        && (
+          userId == request.auth.uid
+          || isAdmin()
+        );
+
+      allow update, delete: if isAdmin();
     }
 
     match /Workspaces/addie-enterprises/accessRequests/{userId} {
@@ -41,7 +60,10 @@ service cloud.firestore {
         && request.resource.data.status == 'pending';
 
       allow read: if signedIn()
-        && (request.auth.uid == userId || isAdmin());
+        && (
+          request.auth.uid == userId
+          || isAdmin()
+        );
 
       allow update, delete: if isAdmin();
     }

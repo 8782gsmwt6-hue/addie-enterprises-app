@@ -8,3 +8,6 @@ export const firebaseConfig = {
 };
 
 export const WORKSPACE_ID = "addie-enterprises";
+
+
+export const OWNER_EMAIL = "matthewcauman@gmail.com";

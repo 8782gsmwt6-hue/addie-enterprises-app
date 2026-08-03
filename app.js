@@ -1,4 +1,4 @@
-import { firebaseConfig, WORKSPACE_ID } from "./firebase-config.js";
+import { firebaseConfig, WORKSPACE_ID, OWNER_EMAIL } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
@@ -92,6 +92,45 @@ const roleLabel = role => ({
   "inventory-manager": "Inventory Manager",
   viewer: "Viewer"
 }[String(role || "").toLowerCase()] || role || "Member");
+
+const normalizeEmail = value =>
+  String(value || "").trim().toLowerCase();
+
+const isConfiguredOwnerEmail = email =>
+  normalizeEmail(email) === normalizeEmail(OWNER_EMAIL);
+
+async function ensureOwnerMember(user) {
+  if (!user || !isConfiguredOwnerEmail(user.email)) {
+    return null;
+  }
+
+  const ownerReference = memberDoc(user.uid);
+  const existing = await getDoc(ownerReference);
+
+  if (existing.exists()) {
+    return {
+      id: existing.id,
+      ...existing.data()
+    };
+  }
+
+  const ownerMember = {
+    uid: user.uid,
+    displayName: "Matthew Auman",
+    email: normalizeEmail(user.email),
+    role: "owner",
+    active: true,
+    approvedAt: serverTimestamp(),
+    approvedBy: "owner-bootstrap"
+  };
+
+  await setDoc(ownerReference, ownerMember, { merge: true });
+
+  return {
+    id: user.uid,
+    ...ownerMember
+  };
+}
 
 
 function setSyncState(state, text) {
@@ -1242,16 +1281,21 @@ function showAuthView(view) {
 async function loadMemberAccess(user) {
   const snapshot = await getDoc(memberDoc(user.uid));
 
-  if (!snapshot.exists()) {
-    return null;
+  if (snapshot.exists()) {
+    const member = {
+      id: snapshot.id,
+      ...snapshot.data()
+    };
+
+    return member.active === false ? null : member;
   }
 
-  const member = {
-    id: snapshot.id,
-    ...snapshot.data()
-  };
+  // One-time recovery when the owner's Firebase UID changes.
+  if (isConfiguredOwnerEmail(user.email)) {
+    return ensureOwnerMember(user);
+  }
 
-  return member.active === false ? null : member;
+  return null;
 }
 
 function startItemSync() {
@@ -1298,6 +1342,9 @@ onAuthStateChanged(auth, async user => {
     if (!currentMember) {
       $("pendingScreen").hidden = false;
       $("pendingEmail").textContent = user.email || "";
+      $("pendingMessage").className = "message";
+      $("pendingMessage").textContent =
+        "Your sign-in worked. This account is waiting for workspace approval.";
       return;
     }
 
