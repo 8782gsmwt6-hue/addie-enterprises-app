@@ -387,20 +387,77 @@ function readForm() {
   return Object.fromEntries(fields.map(id => [id, $(id).value]));
 }
 
-function setForm(i = {}) {
-  const defaults = {category:"Handbag",status:"Purchased",favorite:"false",condition:"Excellent",authentication:"Not authenticated",
-    targetProfit:"25",marketConfidence:"Medium",shippingCosts:"0",buyerPaidShipping:"0"};
-  const values = {
-    ...defaults,
-    ...i,
-    status: normalizedStatus(i.status || defaults.status),
-    favorite: i.favorite === true ? "true" : "false"
+function setForm(item = null) {
+  const isEditing = Boolean(item && item.id);
+
+  const defaults = {
+    inventoryNumber: "",
+    favorite: "false",
+    brand: "",
+    customBrand: "",
+    itemName: "",
+    category: "Handbag",
+    status: "Purchased",
+    colorMaterial: "",
+    condition: "Excellent",
+    accessories: "",
+    authentication: "Not authenticated",
+    purchaseDate: "",
+    purchaseSource: "",
+    purchasePrice: "",
+    targetProfit: "25",
+    expectedPlatform: "",
+    expectedSellingPrice: "",
+    recommendedMaxBuy: "",
+    marketConfidence: "Medium",
+    listingDate: "",
+    listingPlatform: "",
+    listingPrice: "",
+    salePrice: "",
+    saleDate: "",
+    actualPlatformFee: "",
+    shippingCosts: "0",
+    buyerPaidShipping: "0",
+    notes: "",
+    pricingAnalysis: ""
   };
-  Object.keys(values).forEach(k => { if ($(k)) $(k).value = values[k] ?? ""; });
-  $("editId").value = i.id || "";
-  $("formTitle").textContent = i.id ? "Edit Item" : "Add Item";
-  $("deleteCurrentBtn").hidden = !i.id;
+
+  const values = isEditing
+    ? {
+        ...defaults,
+        ...item,
+        status: normalizedStatus(item.status || defaults.status),
+        favorite: item.favorite === true ? "true" : "false"
+      }
+    : { ...defaults };
+
+  const brandSelect = $("brand");
+  const knownBrands = brandSelect
+    ? Array.from(brandSelect.options).map(option => option.value)
+    : [];
+
+  if (isEditing && values.brand && !knownBrands.includes(values.brand)) {
+    values.customBrand = values.brand;
+    values.brand = "Other";
+  }
+
+  Object.keys(defaults).forEach(key => {
+    const element = $(key);
+    if (!element) return;
+
+    element.value = values[key] ?? "";
+  });
+
+  $("editId").value = isEditing ? item.id : "";
+  $("formTitle").textContent = isEditing ? "Edit Item" : "Add Item";
+  $("deleteCurrentBtn").hidden = !isEditing;
+  $("formMessage").className = "message";
   $("formMessage").textContent = "";
+
+  if ($("customBrandWrap")) {
+    $("customBrandWrap").hidden = $("brand")?.value !== "Other";
+  }
+
   previewProfit();
 }
 
@@ -559,7 +616,7 @@ async function saveItem(event) {
     $("formMessage").textContent =
       "Saved and synced successfully.";
 
-    setForm();
+    setForm(null);
     showTab("items");
   } catch (error) {
     console.error(error);
@@ -612,7 +669,7 @@ onAuthStateChanged(auth, user => {
     $("currentUser").textContent = `Signed in as ${user.email}`;
     setSyncState("syncing", "Connecting…");
     startItemSync();
-    setForm();
+    setForm(null);
   } else {
     if (unsubscribeItems) unsubscribeItems();
     items = [];
