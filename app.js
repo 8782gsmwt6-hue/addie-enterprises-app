@@ -221,6 +221,206 @@ function setupOtherSelect(selectId, wrapId, inputId) {
 }
 
 
+
+const helpContent = {
+  purchasePrice: {
+    title: "Purchase Price",
+    body: `
+      <p><strong>What it means:</strong> The total amount paid, or expected to be paid, to acquire the item.</p>
+      <p><strong>What to enter:</strong> Include the item cost and any unavoidable acquisition costs already known, such as buyer premiums or inbound shipping.</p>
+      <p><strong>Why it matters:</strong> Purchase price is the investment used to calculate profit and ROI.</p>
+      <p><strong>Source:</strong> User-entered.</p>
+    `
+  },
+
+  expectedSellingPrice: {
+    title: "Expected Selling Price",
+    body: `
+      <p><strong>What it means:</strong> The realistic price you believe the item will actually sell for.</p>
+      <p><strong>What to enter:</strong> Use recent sold comparisons when available, not just active asking prices.</p>
+      <p><strong>Why it matters:</strong> This value drives projected revenue, estimated fees, projected profit, and maximum recommended buy price.</p>
+      <p><strong>Source:</strong> User-entered estimate. The app does not yet research live sold listings automatically.</p>
+    `
+  },
+
+  expectedPlatform: {
+    title: "Expected Sale Platform",
+    body: `
+      <p><strong>What it means:</strong> The marketplace most likely to produce the sale.</p>
+      <p><strong>Why it matters:</strong> The app uses the selected platform's estimated fee rate when calculating projected profit.</p>
+      <p><strong>Current assumptions:</strong> For example, the app currently estimates approximately 15% for eBay and 20% for Poshmark.</p>
+      <p><strong>Source:</strong> User selection plus the app's configured fee assumptions.</p>
+    `
+  },
+
+  targetRoi: {
+    title: "Target ROI",
+    body: `
+      <p><strong>What it means:</strong> The minimum return you want to earn compared with the amount invested.</p>
+      <p><strong>Formula:</strong> Profit ÷ Purchase Price × 100.</p>
+      <p><strong>Example:</strong> A $100 profit on a $400 purchase equals a 25% ROI.</p>
+      <p><strong>Why it matters:</strong> A higher target ROI lowers the maximum amount the app recommends paying.</p>
+      <p><strong>Source:</strong> User-entered goal.</p>
+    `
+  },
+
+  shippingCosts: {
+    title: "Shipping / Selling Costs",
+    body: `
+      <p><strong>What it means:</strong> Costs paid by Addie Enterprises to complete the sale.</p>
+      <p><strong>Examples:</strong> Shipping label, packaging, authentication, cleaning, repair, or consignment-related costs.</p>
+      <p><strong>Why it matters:</strong> These costs reduce net proceeds and profit dollar-for-dollar.</p>
+      <p><strong>Source:</strong> User-entered.</p>
+    `
+  },
+
+  buyerPaidShipping: {
+    title: "Buyer-paid Shipping",
+    body: `
+      <p><strong>What it means:</strong> Shipping money collected from the buyer.</p>
+      <p><strong>When to use it:</strong> Enter an amount only when the buyer's shipping payment becomes part of your proceeds.</p>
+      <p><strong>Why it matters:</strong> This amount increases projected or actual net proceeds.</p>
+      <p><strong>Source:</strong> User-entered.</p>
+    `
+  },
+
+  marketConfidence: {
+    title: "Market Confidence",
+    body: `
+      <p><strong>High:</strong> Several recent, closely matched sold listings support the estimate.</p>
+      <p><strong>Medium:</strong> Some comparable information exists, but there are meaningful differences or limited sales.</p>
+      <p><strong>Low:</strong> Few reliable sold comparisons exist, or the item is rare, unusual, or difficult to identify.</p>
+      <p><strong>Why it matters:</strong> Confidence affects the Opportunity Score, but it does not change the underlying fee calculation.</p>
+      <p><strong>Source:</strong> User judgment.</p>
+    `
+  },
+
+  condition: {
+    title: "Condition",
+    body: `
+      <p><strong>What it means:</strong> The item's current physical state.</p>
+      <p><strong>What to consider:</strong> Exterior wear, corner wear, handles, straps, interior condition, odor, hardware, stains, cracks, repairs, and missing pieces.</p>
+      <p><strong>Why it matters:</strong> Condition should influence the expected selling price and market confidence.</p>
+      <p><strong>Source:</strong> User assessment.</p>
+    `
+  },
+
+  actualPlatformFee: {
+    title: "Actual Platform Fee",
+    body: `
+      <p><strong>What it means:</strong> The real fee charged by the marketplace after the item sells.</p>
+      <p><strong>When to enter it:</strong> Replace the estimated fee with the exact amount shown in the final sale statement.</p>
+      <p><strong>Why it matters:</strong> Once a sale price is entered, the app uses this actual fee to calculate actual profit.</p>
+      <p><strong>Source:</strong> Marketplace sale statement.</p>
+    `
+  },
+
+  listingPrice: {
+    title: "Listing Price",
+    body: `
+      <p><strong>What it means:</strong> The public asking price currently shown on the marketplace.</p>
+      <p><strong>How the app uses it:</strong> Before an item sells, Listing Price becomes the projected revenue basis when it is entered.</p>
+      <p><strong>Important:</strong> Listing price is not the same as expected accepted-offer price. Use a realistic number when evaluating profitability.</p>
+      <p><strong>Source:</strong> User-entered.</p>
+    `
+  },
+
+  salePrice: {
+    title: "Sale Price",
+    body: `
+      <p><strong>What it means:</strong> The actual amount the buyer paid for the item, before subtracting fees and costs.</p>
+      <p><strong>How the app uses it:</strong> Once entered, the app switches from projected profit to actual profit.</p>
+      <p><strong>Source:</strong> Final marketplace or direct-sale transaction.</p>
+    `
+  },
+
+  authentication: {
+    title: "Authentication",
+    body: `
+      <p><strong>What it means:</strong> Whether the item has been reviewed by an authentication service or other trusted method.</p>
+      <p><strong>Why it matters:</strong> Authentication may increase buyer confidence, reduce disputes, and sometimes support a stronger selling price.</p>
+      <p><strong>Important:</strong> The app records the status but does not authenticate products itself.</p>
+      <p><strong>Source:</strong> User-entered documentation or authentication result.</p>
+    `
+  },
+
+  maximumBuy: {
+    title: "Maximum Recommended Buy",
+    body: `
+      <p><strong>What it means:</strong> The highest purchase price that still allows the selected target ROI after estimated fees and selling costs.</p>
+      <p><strong>Calculation:</strong> Net expected proceeds ÷ (1 + Target ROI).</p>
+      <p><strong>Net expected proceeds:</strong> Expected selling price + buyer-paid shipping − estimated platform fees − selling costs.</p>
+      <p><strong>Source:</strong> App-calculated from user-entered information and configured fee assumptions.</p>
+    `
+  },
+
+  projectedProfit: {
+    title: "Projected Profit",
+    body: `
+      <p><strong>What it means:</strong> The estimated dollars remaining after purchase cost, estimated fees, and selling costs.</p>
+      <p><strong>Calculation:</strong> Expected revenue + buyer-paid shipping − estimated fees − selling costs − purchase price.</p>
+      <p><strong>Important:</strong> This is an estimate until the actual sale price and actual fee are entered.</p>
+      <p><strong>Source:</strong> App-calculated.</p>
+    `
+  },
+
+  projectedRoi: {
+    title: "Projected ROI",
+    body: `
+      <p><strong>What it means:</strong> The projected profit compared with the purchase investment.</p>
+      <p><strong>Calculation:</strong> Projected Profit ÷ Purchase Price × 100.</p>
+      <p><strong>Example:</strong> $125 projected profit on a $500 purchase equals 25% projected ROI.</p>
+      <p><strong>Source:</strong> App-calculated.</p>
+    `
+  },
+
+  estimatedFees: {
+    title: "Estimated Platform Fees",
+    body: `
+      <p><strong>What it means:</strong> The app's estimate of what the selling marketplace may charge.</p>
+      <p><strong>How it is calculated:</strong> Expected revenue multiplied by the configured platform fee percentage.</p>
+      <p><strong>Important:</strong> Actual fees can vary due to category, seller plan, taxes, promoted listings, shipping, and marketplace policy changes.</p>
+      <p><strong>Source:</strong> App fee assumption, not a live marketplace quote.</p>
+    `
+  },
+
+  opportunityScore: {
+    title: "Opportunity Score",
+    body: `
+      <p><strong>What it means:</strong> A 0–100 summary score intended to make potential deals easier to compare.</p>
+      <p><strong>Current inputs:</strong> Projected ROI, projected dollar profit, and selected market confidence.</p>
+      <p><strong>Important:</strong> This is an internal app score. It is not based on live market research, sell-through rate, or an AI model yet.</p>
+      <p><strong>Source:</strong> App-calculated.</p>
+    `
+  },
+
+  recommendation: {
+    title: "BUY / NEGOTIATE / PASS",
+    body: `
+      <p><strong>BUY:</strong> The entered purchase price is comfortably below the maximum recommended buy and projected ROI meets the app's threshold.</p>
+      <p><strong>NEGOTIATE:</strong> The deal is close, but the price should be reduced to protect the target return.</p>
+      <p><strong>PASS:</strong> The current price is too high for the selected target ROI and entered assumptions.</p>
+      <p><strong>Important:</strong> The recommendation is only as reliable as the expected selling price, fee assumption, condition assessment, and market confidence entered by the user.</p>
+      <p><strong>Source:</strong> App-calculated decision rule.</p>
+    `
+  }
+};
+
+function openInfoModal(helpKey) {
+  const content = helpContent[helpKey];
+  if (!content) return;
+
+  $("infoModalTitle").textContent = content.title;
+  $("infoModalBody").innerHTML = content.body;
+  $("infoModal").hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeInfoModal() {
+  $("infoModal").hidden = true;
+  document.body.classList.remove("modal-open");
+}
+
 function populateDealAnalyzerFields() {
   const sourceBrand = $("brand");
   const dealBrand = $("dealBrand");
@@ -570,7 +770,38 @@ function calculation(i) {
 }
 
 function showTab(id) {
-  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+  
+document.querySelectorAll(".info-button").forEach(button => {
+  button.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    openInfoModal(button.dataset.help);
+  });
+});
+
+if ($("infoModalCloseBtn")) {
+  $("infoModalCloseBtn").addEventListener("click", closeInfoModal);
+}
+
+if ($("infoModalDoneBtn")) {
+  $("infoModalDoneBtn").addEventListener("click", closeInfoModal);
+}
+
+if ($("infoModal")) {
+  $("infoModal").addEventListener("click", event => {
+    if (event.target?.dataset?.closeInfo === "true") {
+      closeInfoModal();
+    }
+  });
+}
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !$("infoModal")?.hidden) {
+    closeInfoModal();
+  }
+});
+
+document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
   document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === id));
   window.scrollTo({top:0, behavior:"smooth"});
 }

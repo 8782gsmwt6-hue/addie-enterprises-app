@@ -764,3 +764,153 @@ input[type="number"]{
     width:100%;
   }
 }
+
+
+/* v4.3.3 information buttons */
+.label-with-info{
+  display:flex !important;
+  align-items:center;
+  gap:7px;
+}
+
+.info-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  min-width:22px;
+  min-height:22px !important;
+  padding:0 !important;
+  border:1px solid #9a6b24;
+  border-radius:999px;
+  background:#fff8e8;
+  color:#8a5d1d;
+  font-size:.78rem;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+  vertical-align:middle;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.info-button:hover,
+.info-button:focus{
+  background:#f4e4bd;
+  outline:none;
+}
+
+.info-button-dark{
+  border-color:rgba(255,255,255,.7);
+  background:rgba(255,255,255,.12);
+  color:#fff;
+}
+
+.info-button-light{
+  border-color:#b7c1cc;
+  background:#fff;
+  color:#52606d;
+}
+
+.deal-hero-result span,
+.deal-score-label{
+  display:flex !important;
+  align-items:center;
+  gap:6px;
+}
+
+.info-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+
+.info-modal[hidden]{
+  display:none !important;
+}
+
+.info-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(15,23,42,.62);
+  backdrop-filter:blur(3px);
+}
+
+.info-modal-card{
+  position:relative;
+  width:min(560px,100%);
+  max-height:min(80vh,720px);
+  overflow:auto;
+  padding:28px;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 24px 70px rgba(15,23,42,.30);
+}
+
+.info-modal-close{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:999px;
+  background:#eef2f6;
+  color:#334155;
+  font-size:1.55rem;
+  line-height:1;
+  cursor:pointer;
+}
+
+.info-modal-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  margin-bottom:12px;
+  border-radius:999px;
+  background:#fff3d6;
+  color:#9a6b24;
+  font-size:1.35rem;
+  font-weight:900;
+}
+
+.info-modal-card h2{
+  margin:0 48px 16px 0;
+}
+
+.info-modal-body{
+  color:#475569;
+  line-height:1.55;
+}
+
+.info-modal-body p{
+  margin:0 0 14px;
+}
+
+.info-modal-body strong{
+  color:#172b43;
+}
+
+.modal-open{
+  overflow:hidden;
+}
+
+@media(max-width:650px){
+  .info-modal{
+    align-items:flex-end;
+    padding:0;
+  }
+
+  .info-modal-card{
+    width:100%;
+    max-height:86vh;
+    border-radius:22px 22px 0 0;
+    padding:24px 20px;
+  }
+}

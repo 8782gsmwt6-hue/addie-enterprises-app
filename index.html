@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.3.2" />
+  <link rel="stylesheet" href="styles.css?v=4.3.3" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -138,7 +138,7 @@
             </div>
 
             <div>
-              <label>Condition</label>
+              <label class="label-with-info">Condition<button type="button" class="info-button" data-help="condition" aria-label="Information about Condition">ⓘ</button></label>
               <select id="dealCondition">
                 <option>New</option>
                 <option selected>Excellent</option>
@@ -150,7 +150,7 @@
             </div>
 
             <div>
-              <label>Market Confidence</label>
+              <label class="label-with-info">Market Confidence<button type="button" class="info-button" data-help="marketConfidence" aria-label="Information about Market Confidence">ⓘ</button></label>
               <select id="dealMarketConfidence">
                 <option>High</option>
                 <option selected>Medium</option>
@@ -159,32 +159,32 @@
             </div>
 
             <div>
-              <label>Asking / Purchase Price</label>
+              <label class="label-with-info">Asking / Purchase Price<button type="button" class="info-button" data-help="purchasePrice" aria-label="Information about Asking / Purchase Price">ⓘ</button></label>
               <input id="dealPurchasePrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="425.00" />
             </div>
 
             <div>
-              <label>Expected Selling Price</label>
+              <label class="label-with-info">Expected Selling Price<button type="button" class="info-button" data-help="expectedSellingPrice" aria-label="Information about Expected Selling Price">ⓘ</button></label>
               <input id="dealExpectedSellingPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="685.00" />
             </div>
 
             <div>
-              <label>Expected Sale Platform</label>
+              <label class="label-with-info">Expected Sale Platform<button type="button" class="info-button" data-help="expectedPlatform" aria-label="Information about Expected Sale Platform">ⓘ</button></label>
               <select id="dealExpectedPlatform"></select>
             </div>
 
             <div>
-              <label>Target ROI (%)</label>
+              <label class="label-with-info">Target ROI (%)<button type="button" class="info-button" data-help="targetRoi" aria-label="Information about Target ROI (%)">ⓘ</button></label>
               <input id="dealTargetProfit" type="number" inputmode="decimal" min="0" step="1" value="25" />
             </div>
 
             <div>
-              <label>Shipping / Selling Costs</label>
+              <label class="label-with-info">Shipping / Selling Costs<button type="button" class="info-button" data-help="shippingCosts" aria-label="Information about Shipping / Selling Costs">ⓘ</button></label>
               <input id="dealShippingCosts" type="number" inputmode="decimal" min="0" step="0.01" value="0" />
             </div>
 
             <div>
-              <label>Buyer-paid Shipping</label>
+              <label class="label-with-info">Buyer-paid Shipping<button type="button" class="info-button" data-help="buyerPaidShipping" aria-label="Information about Buyer-paid Shipping">ⓘ</button></label>
               <input id="dealBuyerPaidShipping" type="number" inputmode="decimal" min="0" step="0.01" value="0" />
             </div>
           </div>
@@ -192,7 +192,7 @@
           <section class="deal-analyzer-card deal-neutral" id="dealAnalyzerCard">
             <div class="deal-meter-header">
               <div>
-                <div class="eyebrow">LIVE DEAL ANALYZER</div>
+                <div class="eyebrow">LIVE DEAL ANALYZER <button type="button" class="info-button" data-help="recommendation" aria-label="Information about the Deal Analyzer recommendation">ⓘ</button></div>
                 <h3 id="dealRecommendation">Enter pricing details</h3>
                 <p id="dealReason">
                   Enter a purchase price, expected or listing price, platform, and target ROI.
@@ -200,24 +200,24 @@
               </div>
 
               <div class="deal-score-wrap">
-                <span class="deal-score-label">Opportunity Score</span>
+                <span class="deal-score-label">Opportunity Score <button type="button" class="info-button info-button-light" data-help="opportunityScore" aria-label="Information about Opportunity Score">ⓘ</button></span>
                 <strong id="dealScore">—</strong>
               </div>
             </div>
 
             <div class="deal-primary-results">
               <div class="deal-hero-result">
-                <span>Maximum Recommended Buy</span>
+                <span>Maximum Recommended Buy <button type="button" class="info-button info-button-dark" data-help="maximumBuy" aria-label="Information about Maximum Recommended Buy">ⓘ</button></span>
                 <strong id="dealMaxBuy">$0.00</strong>
               </div>
 
               <div class="deal-hero-result">
-                <span>Projected Profit</span>
+                <span>Projected Profit <button type="button" class="info-button info-button-dark" data-help="projectedProfit" aria-label="Information about Projected Profit">ⓘ</button></span>
                 <strong id="dealProfit">$0.00</strong>
               </div>
 
               <div class="deal-hero-result">
-                <span>Projected ROI</span>
+                <span>Projected ROI <button type="button" class="info-button info-button-dark" data-help="projectedRoi" aria-label="Information about Projected ROI">ⓘ</button></span>
                 <strong id="dealRoi">0.0%</strong>
               </div>
             </div>
@@ -229,7 +229,7 @@
               </div>
 
               <div>
-                <span>Estimated Platform Fees</span>
+                <span>Estimated Platform Fees <button type="button" class="info-button info-button-light" data-help="estimatedFees" aria-label="Information about Estimated Platform Fees">ⓘ</button></span>
                 <strong id="dealFees">$0.00</strong>
               </div>
 
@@ -447,9 +447,9 @@
               </select>
             </div>
             <div><label>Color / Material</label><input id="colorMaterial" placeholder="Brown monogram canvas" /></div>
-            <div><label>Condition</label><select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
+            <div><label class="label-with-info">Condition<button type="button" class="info-button" data-help="condition" aria-label="Information about Condition">ⓘ</button></label><select id="condition"><option>New</option><option>Excellent</option><option>Very Good</option><option>Good</option><option>Fair</option><option>Poor</option></select></div>
             <div><label>Accessories</label><input id="accessories" placeholder="Dust bag, box, strap" /></div>
-            <div><label>Authentication</label><select id="authentication"><option>Not authenticated</option><option>Authenticated</option><option>Pending</option><option>Not required</option></select></div>
+            <div><label class="label-with-info">Authentication<button type="button" class="info-button" data-help="authentication" aria-label="Information about Authentication">ⓘ</button></label><select id="authentication"><option>Not authenticated</option><option>Authenticated</option><option>Pending</option><option>Not required</option></select></div>
           </div>
 
           <div class="section-title">Purchase and Pricing Analysis</div>
@@ -457,18 +457,18 @@
             <div><label>Purchase Date</label><input id="purchaseDate" type="date" /></div>
             <div><label>Purchase Source</label><input id="purchaseSource" placeholder="Estate sale, auction, eBay" /></div>
             <div><label>Purchase Price (all in) *</label><input id="purchasePrice" type="number" min="0" step="0.01" required /></div>
-            <div><label>Target ROI (%)</label><input id="targetProfit" type="number" min="0" step="0.1" value="25" /></div>
+            <div><label class="label-with-info">Target ROI (%)<button type="button" class="info-button" data-help="targetRoi" aria-label="Information about Target ROI (%)">ⓘ</button></label><input id="targetProfit" type="number" min="0" step="0.1" value="25" /></div>
             <div>
-              <label>Expected Sale Platform</label>
+              <label class="label-with-info">Expected Sale Platform<button type="button" class="info-button" data-help="expectedPlatform" aria-label="Information about Expected Sale Platform">ⓘ</button></label>
               <select id="expectedPlatform"></select>
               <div id="customExpectedPlatformWrap" class="other-detail-wrap" hidden>
                 <label>Other Expected Platform</label>
                 <input id="customExpectedPlatform" placeholder="Enter platform name" />
               </div>
             </div>
-            <div><label>Expected Selling Price</label><input id="expectedSellingPrice" type="number" min="0" step="0.01" placeholder="850.00" /></div>
+            <div><label class="label-with-info">Expected Selling Price<button type="button" class="info-button" data-help="expectedSellingPrice" aria-label="Information about Expected Selling Price">ⓘ</button></label><input id="expectedSellingPrice" type="number" min="0" step="0.01" placeholder="850.00" /></div>
             <div><label>Recommended Max Buy</label><input id="recommendedMaxBuy" type="number" min="0" step="0.01" /></div>
-            <div><label>Market Confidence</label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
+            <div><label class="label-with-info">Market Confidence<button type="button" class="info-button" data-help="marketConfidence" aria-label="Information about Market Confidence">ⓘ</button></label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
           </div>
 <div class="section-title">Listing and Actual Sale</div>
           <div class="form-grid four">
@@ -482,7 +482,7 @@
                 <input id="customListingPlatform" placeholder="Enter one or more, separated by commas" />
               </div>
             </div>
-            <div><label>Listing Price</label><input id="listingPrice" type="number" min="0" step="0.01" placeholder="899.00" /></div>
+            <div><label class="label-with-info">Listing Price<button type="button" class="info-button" data-help="listingPrice" aria-label="Information about Listing Price">ⓘ</button></label><input id="listingPrice" type="number" min="0" step="0.01" placeholder="899.00" /></div>
             <div><label>Actual Sale Price</label><input id="salePrice" type="number" min="0" step="0.01" placeholder="760.00" /></div>
             <div><label>Sale Date</label><input id="saleDate" type="date" /></div>
             <div>
@@ -493,9 +493,9 @@
                 <input id="customActualSalePlatform" placeholder="Enter platform name" />
               </div>
             </div>
-            <div><label>Actual Platform Fee</label><input id="actualPlatformFee" type="number" min="0" step="0.01" placeholder="76.00" /></div>
-            <div><label>Shipping / Selling Costs</label><input id="shippingCosts" type="number" min="0" step="0.01" value="0" /></div>
-            <div><label>Buyer-paid Shipping</label><input id="buyerPaidShipping" type="number" min="0" step="0.01" value="0" /></div>
+            <div><label class="label-with-info">Actual Platform Fee<button type="button" class="info-button" data-help="actualPlatformFee" aria-label="Information about Actual Platform Fee">ⓘ</button></label><input id="actualPlatformFee" type="number" min="0" step="0.01" placeholder="76.00" /></div>
+            <div><label class="label-with-info">Shipping / Selling Costs<button type="button" class="info-button" data-help="shippingCosts" aria-label="Information about Shipping / Selling Costs">ⓘ</button></label><input id="shippingCosts" type="number" min="0" step="0.01" value="0" /></div>
+            <div><label class="label-with-info">Buyer-paid Shipping<button type="button" class="info-button" data-help="buyerPaidShipping" aria-label="Information about Buyer-paid Shipping">ⓘ</button></label><input id="buyerPaidShipping" type="number" min="0" step="0.01" value="0" /></div>
           </div>
 
           <div id="profitPreview" class="profit-preview"></div>
@@ -582,6 +582,21 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.3.2"></script>
+<script type="module" src="app.js?v=4.3.3"></script>
+
+  <div id="infoModal" class="info-modal" hidden>
+    <div class="info-modal-backdrop" data-close-info="true"></div>
+
+    <section class="info-modal-card" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+      <button type="button" class="info-modal-close" id="infoModalCloseBtn" aria-label="Close information">×</button>
+
+      <div class="info-modal-icon">ⓘ</div>
+      <h2 id="infoModalTitle">Field Information</h2>
+      <div id="infoModalBody" class="info-modal-body"></div>
+
+      <button type="button" class="primary wide" id="infoModalDoneBtn">Got It</button>
+    </section>
+  </div>
+
 </body>
 </html>
