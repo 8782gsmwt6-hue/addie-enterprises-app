@@ -1,10 +1,10 @@
 import { firebaseConfig, WORKSPACE_ID } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
-  getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDoc, setDoc,
   onSnapshot, serverTimestamp, query, orderBy, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
@@ -28,6 +28,9 @@ const estimatedFeeRates = {
 
 let items = [];
 let unsubscribeItems = null;
+let unsubscribeTeamMembers = null;
+let unsubscribeAccessRequests = null;
+let currentMember = null;
 let saveInProgress = false;
 const $ = id => document.getElementById(id);
 const number = v => Number(v || 0);
@@ -73,7 +76,22 @@ const normalizedStatus = value => {
   return value;
 };
 
+const workspaceDoc = () => doc(db, "Workspaces", WORKSPACE_ID);
 const itemCollection = () => collection(db, "Workspaces", WORKSPACE_ID, "items");
+const membersCollection = () => collection(db, "Workspaces", WORKSPACE_ID, "members");
+const accessRequestsCollection = () => collection(db, "Workspaces", WORKSPACE_ID, "accessRequests");
+const memberDoc = uid => doc(db, "Workspaces", WORKSPACE_ID, "members", uid);
+const accessRequestDoc = uid => doc(db, "Workspaces", WORKSPACE_ID, "accessRequests", uid);
+
+const isTeamAdmin = member =>
+  ["owner", "admin"].includes(String(member?.role || "").toLowerCase());
+
+const roleLabel = role => ({
+  owner: "Owner",
+  admin: "Admin",
+  "inventory-manager": "Inventory Manager",
+  viewer: "Viewer"
+}[String(role || "").toLowerCase()] || role || "Member");
 
 
 function setSyncState(state, text) {
@@ -93,7 +111,19 @@ function friendlyError(error) {
   }
 
   if (code.includes("auth/too-many-requests")) {
-    return "Too many sign-in attempts. Wait a few minutes and try again.";
+    return "Too many attempts. Wait a few minutes and try again.";
+  }
+
+  if (code.includes("auth/email-already-in-use")) {
+    return "An account already exists for that email. Use Sign In or Forgot password.";
+  }
+
+  if (code.includes("auth/weak-password")) {
+    return "Choose a stronger password with at least 8 characters.";
+  }
+
+  if (code.includes("auth/invalid-email")) {
+    return "Enter a valid email address.";
   }
 
   if (code.includes("permission-denied")) {
@@ -1016,6 +1046,214 @@ async function removeItem(id) {
   if ($("editId").value === id) setForm();
 }
 
+
+function stopTeamListeners() {
+  if (unsubscribeTeamMembers) {
+    unsubscribeTeamMembers();
+    unsubscribeTeamMembers = null;
+  }
+
+  if (unsubscribeAccessRequests) {
+    unsubscribeAccessRequests();
+    unsubscribeAccessRequests = null;
+  }
+}
+
+function renderTeamMembers(members) {
+  const list = $("teamMembersList");
+  if (!list) return;
+
+  if (!members.length) {
+    list.innerHTML = '<div class="empty">No approved team members.</div>';
+    return;
+  }
+
+  list.innerHTML = members
+    .sort((a, b) =>
+      String(a.displayName || a.email || "")
+        .localeCompare(String(b.displayName || b.email || ""))
+    )
+    .map(member => `
+      <div class="team-row">
+        <div>
+          <strong>${escapeHtml(member.displayName || member.email || "Team Member")}</strong>
+          <span class="muted">${escapeHtml(member.email || "")}</span>
+        </div>
+        <span class="role-pill">${escapeHtml(roleLabel(member.role))}</span>
+      </div>
+    `)
+    .join("");
+}
+
+function renderPendingRequests(requests) {
+  const list = $("pendingRequestsList");
+  if (!list) return;
+
+  const pending = requests.filter(
+    request => String(request.status || "pending").toLowerCase() === "pending"
+  );
+
+  if (!pending.length) {
+    list.innerHTML = '<div class="empty">No pending requests.</div>';
+    return;
+  }
+
+  list.innerHTML = pending.map(request => `
+    <div class="team-request" data-request-id="${escapeHtml(request.id)}">
+      <div class="team-request-person">
+        <strong>${escapeHtml(request.displayName || "New User")}</strong>
+        <span class="muted">${escapeHtml(request.email || "")}</span>
+      </div>
+
+      <select class="request-role-select" aria-label="Select role">
+        <option value="inventory-manager">Inventory Manager</option>
+        <option value="viewer">Viewer</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <div class="row-actions">
+        <button type="button" class="primary approve-request-btn" data-id="${escapeHtml(request.id)}">Approve</button>
+        <button type="button" class="danger deny-request-btn" data-id="${escapeHtml(request.id)}">Deny</button>
+      </div>
+    </div>
+  `).join("");
+
+  list.querySelectorAll(".approve-request-btn").forEach(button => {
+    button.addEventListener("click", async () => {
+      const requestId = button.dataset.id;
+      const row = button.closest(".team-request");
+      const role = row.querySelector(".request-role-select").value;
+      const request = pending.find(item => item.id === requestId);
+      if (!request) return;
+
+      button.disabled = true;
+      $("teamMessage").className = "message";
+      $("teamMessage").textContent = "Approving user…";
+
+      try {
+        await setDoc(memberDoc(requestId), {
+          uid: requestId,
+          displayName: request.displayName || "",
+          email: request.email || "",
+          role,
+          active: true,
+          approvedAt: serverTimestamp(),
+          approvedBy: auth.currentUser?.email || ""
+        }, { merge: true });
+
+        await updateDoc(accessRequestDoc(requestId), {
+          status: "approved",
+          approvedAt: serverTimestamp(),
+          approvedBy: auth.currentUser?.email || "",
+          approvedRole: role
+        });
+
+        $("teamMessage").className = "message ok";
+        $("teamMessage").textContent =
+          `${request.displayName || request.email} was approved as ${roleLabel(role)}.`;
+      } catch (error) {
+        $("teamMessage").className = "message error";
+        $("teamMessage").textContent = friendlyError(error);
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+
+  list.querySelectorAll(".deny-request-btn").forEach(button => {
+    button.addEventListener("click", async () => {
+      const requestId = button.dataset.id;
+      const request = pending.find(item => item.id === requestId);
+      if (!request) return;
+
+      if (!confirm(`Deny access for ${request.displayName || request.email}?`)) {
+        return;
+      }
+
+      try {
+        await updateDoc(accessRequestDoc(requestId), {
+          status: "denied",
+          deniedAt: serverTimestamp(),
+          deniedBy: auth.currentUser?.email || ""
+        });
+
+        $("teamMessage").className = "message ok";
+        $("teamMessage").textContent = "Access request denied.";
+      } catch (error) {
+        $("teamMessage").className = "message error";
+        $("teamMessage").textContent = friendlyError(error);
+      }
+    });
+  });
+}
+
+function startTeamManagement() {
+  stopTeamListeners();
+
+  const card = $("teamManagementCard");
+  const allowed = isTeamAdmin(currentMember);
+
+  if (card) card.hidden = !allowed;
+  if (!allowed) return;
+
+  unsubscribeTeamMembers = onSnapshot(
+    membersCollection(),
+    snapshot => {
+      const members = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+      }));
+
+      renderTeamMembers(members);
+    },
+    error => {
+      $("teamMessage").className = "message error";
+      $("teamMessage").textContent = friendlyError(error);
+    }
+  );
+
+  unsubscribeAccessRequests = onSnapshot(
+    accessRequestsCollection(),
+    snapshot => {
+      const requests = snapshot.docs.map(document => ({
+        id: document.id,
+        ...document.data()
+      }));
+
+      renderPendingRequests(requests);
+    },
+    error => {
+      $("teamMessage").className = "message error";
+      $("teamMessage").textContent = friendlyError(error);
+    }
+  );
+}
+
+function showAuthView(view) {
+  const signingIn = view === "signin";
+  $("authForm").hidden = !signingIn;
+  $("showRequestAccessBtn").hidden = !signingIn;
+  $("forgotPasswordBtn").hidden = !signingIn;
+  $("requestAccessForm").hidden = signingIn;
+  $("authMessage").className = "message";
+  $("authMessage").textContent = "";
+}
+
+async function loadMemberAccess(user) {
+  const snapshot = await getDoc(memberDoc(user.uid));
+
+  if (!snapshot.exists()) {
+    return null;
+  }
+
+  const member = {
+    id: snapshot.id,
+    ...snapshot.data()
+  };
+
+  return member.active === false ? null : member;
+}
+
 function startItemSync() {
   if (unsubscribeItems) unsubscribeItems();
   setSyncState("syncing", "Syncing…");
@@ -1032,17 +1270,51 @@ function startItemSync() {
   });
 }
 
-onAuthStateChanged(auth, user => {
-  $("authScreen").hidden = !!user;
-  $("appShell").hidden = !user;
-  if (user) {
-    $("currentUser").textContent = `Signed in as ${user.email}`;
+onAuthStateChanged(auth, async user => {
+  if (unsubscribeItems) {
+    unsubscribeItems();
+    unsubscribeItems = null;
+  }
+
+  stopTeamListeners();
+  items = [];
+  currentMember = null;
+
+  if (!user) {
+    $("authScreen").hidden = false;
+    $("pendingScreen").hidden = true;
+    $("appShell").hidden = true;
+    showAuthView("signin");
+    return;
+  }
+
+  $("authScreen").hidden = true;
+  $("appShell").hidden = true;
+  $("pendingScreen").hidden = true;
+
+  try {
+    currentMember = await loadMemberAccess(user);
+
+    if (!currentMember) {
+      $("pendingScreen").hidden = false;
+      $("pendingEmail").textContent = user.email || "";
+      return;
+    }
+
+    $("appShell").hidden = false;
+    $("currentUser").textContent =
+      `Signed in as ${currentMember.displayName || user.email} · ${roleLabel(currentMember.role)}`;
+
     setSyncState("syncing", "Connecting…");
     startItemSync();
+    startTeamManagement();
     setForm(null);
-  } else {
-    if (unsubscribeItems) unsubscribeItems();
-    items = [];
+  } catch (error) {
+    $("authScreen").hidden = false;
+    $("pendingScreen").hidden = true;
+    $("appShell").hidden = true;
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = friendlyError(error);
   }
 });
 
@@ -1058,6 +1330,90 @@ $("authForm").addEventListener("submit", async event => {
     $("authMessage").textContent = friendlyError(error);
   }
 });
+
+$("showRequestAccessBtn").addEventListener("click", () => {
+  showAuthView("request");
+});
+
+$("cancelRequestAccessBtn").addEventListener("click", () => {
+  showAuthView("signin");
+});
+
+$("requestAccessForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const displayName = $("requestName").value.trim();
+  const email = $("requestEmail").value.trim().toLowerCase();
+  const password = $("requestPassword").value;
+  const confirmation = $("requestPasswordConfirm").value;
+
+  if (!displayName) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = "Enter your name.";
+    return;
+  }
+
+  if (password !== confirmation) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = "The passwords do not match.";
+    return;
+  }
+
+  if (password.length < 8) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = "Use a password with at least 8 characters.";
+    return;
+  }
+
+  $("authMessage").className = "message";
+  $("authMessage").textContent = "Creating account…";
+
+  try {
+    const credential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+    await setDoc(accessRequestDoc(credential.user.uid), {
+      uid: credential.user.uid,
+      displayName,
+      email,
+      status: "pending",
+      requestedAt: serverTimestamp()
+    });
+
+    $("authMessage").className = "message ok";
+    $("authMessage").textContent =
+      "Account created. Your access request is waiting for approval.";
+  } catch (error) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = friendlyError(error);
+  }
+});
+
+$("forgotPasswordBtn").addEventListener("click", async () => {
+  const email =
+    $("authEmail").value.trim() ||
+    prompt("Enter the email address for the account:");
+
+  if (!email) return;
+
+  $("authMessage").className = "message";
+  $("authMessage").textContent = "Sending password reset email…";
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    $("authMessage").className = "message ok";
+    $("authMessage").textContent =
+      "Password reset email sent. Check the inbox and spam folder.";
+  } catch (error) {
+    $("authMessage").className = "message error";
+    $("authMessage").textContent = friendlyError(error);
+  }
+});
+
+$("pendingSignOutBtn").addEventListener("click", () => signOut(auth));
 
 
 $("signOutBtn").onclick = $("settingsSignOutBtn").onclick = () => signOut(auth);

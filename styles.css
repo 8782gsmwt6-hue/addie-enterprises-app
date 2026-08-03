@@ -615,3 +615,121 @@ input[type="number"]{
 .platform-check{
   display:none !important;
 }
+
+
+/* v4.3 Team Access */
+.auth-secondary-actions{
+  display:grid;
+  gap:8px;
+  margin-top:10px;
+}
+
+.link-button{
+  border:0;
+  background:transparent;
+  color:#1f4b7a;
+  font:inherit;
+  font-weight:800;
+  cursor:pointer;
+  padding:8px;
+}
+
+.request-access-form{
+  margin-top:8px;
+}
+
+.auth-divider{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:14px 0;
+  color:#64748b;
+  font-size:.8rem;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.auth-divider::before,
+.auth-divider::after{
+  content:"";
+  flex:1;
+  height:1px;
+  background:#d7dde5;
+}
+
+.pending-card{
+  text-align:center;
+}
+
+.pending-email{
+  margin:18px 0;
+  padding:12px;
+  border-radius:12px;
+  background:#eef4fa;
+  color:#172b43;
+  font-weight:900;
+  word-break:break-word;
+}
+
+.team-section{
+  margin-top:20px;
+}
+
+.team-list{
+  display:grid;
+  gap:10px;
+}
+
+.team-row,
+.team-request{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border:1px solid #dde3ea;
+  border-radius:13px;
+  background:#f8fafc;
+}
+
+.team-row strong,
+.team-request strong{
+  display:block;
+}
+
+.team-request-person{
+  min-width:0;
+}
+
+.role-pill{
+  display:inline-flex;
+  padding:5px 10px;
+  border-radius:999px;
+  background:#e8eef5;
+  color:#29445f;
+  font-size:.76rem;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.request-role-select{
+  min-width:175px;
+}
+
+@media(max-width:760px){
+  .team-row,
+  .team-request{
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+
+  .request-role-select{
+    width:100%;
+  }
+
+  .team-request .row-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+}

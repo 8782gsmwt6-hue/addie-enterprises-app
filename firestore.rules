@@ -3,12 +3,47 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath() {
+      return /databases/$(database)/documents/Workspaces/addie-enterprises/members/$(request.auth.uid);
+    }
+
+    function isMember() {
+      return signedIn()
+        && exists(memberPath())
+        && get(memberPath()).data.active != false;
+    }
+
+    function isAdmin() {
+      return isMember()
+        && get(memberPath()).data.role in ['owner', 'admin'];
+    }
+
     match /Workspaces/addie-enterprises/items/{itemId} {
-      allow read, create, update, delete: if request.auth != null;
+      allow read, create, update, delete: if isMember();
     }
 
     match /Workspaces/addie-enterprises/members/{userId} {
-      allow read: if request.auth != null;
+      allow read: if signedIn()
+        && (request.auth.uid == userId || isAdmin());
+
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /Workspaces/addie-enterprises/accessRequests/{userId} {
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'pending';
+
+      allow read: if signedIn()
+        && (request.auth.uid == userId || isAdmin());
+
+      allow update, delete: if isAdmin();
     }
   }
 }

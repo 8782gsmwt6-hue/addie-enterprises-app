@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.2.6" />
+  <link rel="stylesheet" href="styles.css?v=4.3.0" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -26,8 +26,46 @@
         <input id="authPassword" type="password" autocomplete="current-password" minlength="6" required placeholder="Password" />
         <button class="primary wide" type="submit" id="signInBtn">Sign In</button>
       </form>
-<p class="small">Only approved Addie Enterprises users can sign in. Contact the administrator if you need access.</p>
+
+      <div class="auth-secondary-actions">
+        <button type="button" class="secondary wide" id="showRequestAccessBtn">Request Access</button>
+        <button type="button" class="link-button" id="forgotPasswordBtn">Forgot password?</button>
+      </div>
+
+      <form id="requestAccessForm" class="request-access-form" hidden>
+        <div class="auth-divider"><span>Create your account</span></div>
+
+        <label>Your Name</label>
+        <input id="requestName" autocomplete="name" required placeholder="Addie" />
+
+        <label>Email</label>
+        <input id="requestEmail" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="name@example.com" />
+
+        <label>Create Password</label>
+        <input id="requestPassword" type="password" autocomplete="new-password" minlength="8" required placeholder="At least 8 characters" />
+
+        <label>Confirm Password</label>
+        <input id="requestPasswordConfirm" type="password" autocomplete="new-password" minlength="8" required placeholder="Re-enter password" />
+
+        <button class="primary wide" type="submit" id="requestAccessBtn">Create Account & Request Access</button>
+        <button class="secondary wide" type="button" id="cancelRequestAccessBtn">Back to Sign In</button>
+      </form>
+
+      <p class="small">New accounts require approval from an Addie Enterprises owner or administrator.</p>
       <div id="authMessage" class="message" aria-live="polite"></div>
+    </section>
+  </div>
+
+
+  <div id="pendingScreen" class="auth-shell" hidden>
+    <section class="auth-card pending-card">
+      <div class="brand-mark">AE</div>
+      <h1>Access Request Submitted</h1>
+      <p>Your account has been created, but an owner must approve access before you can view Addie Enterprises inventory.</p>
+      <div class="pending-email" id="pendingEmail"></div>
+      <p class="small">Once approved, sign out and sign back in—or simply reopen the app.</p>
+      <button class="secondary wide" id="pendingSignOutBtn">Sign Out</button>
+      <div id="pendingMessage" class="message" aria-live="polite"></div>
     </section>
   </div>
 
@@ -400,6 +438,28 @@
           <p>Open the deployed site in Safari, tap <strong>Share</strong>, select <strong>Add to Home Screen</strong>, and tap <strong>Add</strong>.</p>
           <p class="helper">Sign in with the same approved account on every device. Data is stored in Firebase rather than only on the phone.</p>
         </div>
+
+        <div class="card" id="teamManagementCard" hidden>
+          <div class="section-title">Team Management</div>
+          <p class="helper">Approve new account requests and control who can access the shared Addie Enterprises workspace.</p>
+
+          <div class="team-section">
+            <h3>Pending Requests</h3>
+            <div id="pendingRequestsList" class="team-list">
+              <div class="empty">No pending requests.</div>
+            </div>
+          </div>
+
+          <div class="team-section">
+            <h3>Approved Team Members</h3>
+            <div id="teamMembersList" class="team-list">
+              <div class="empty">Loading team members…</div>
+            </div>
+          </div>
+
+          <div id="teamMessage" class="message" aria-live="polite"></div>
+        </div>
+
         <div class="card">
           <div class="section-title">Session</div>
           <p id="currentUser"></p><div id="syncDetail" class="sync-detail" hidden></div>
@@ -438,6 +498,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.2.6"></script>
+<script type="module" src="app.js?v=4.3.0"></script>
 </body>
 </html>
