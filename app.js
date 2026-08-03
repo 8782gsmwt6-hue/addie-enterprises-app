@@ -116,10 +116,183 @@ function showSyncDetail(message = "") {
   detail.hidden = !message;
 }
 
-function populatePlatforms() {
-  ["expectedPlatform", "listingPlatform"].forEach(id => {
-    $(id).innerHTML = platforms.map(p => `<option value="${p}">${p || "Select platform"}</option>`).join("");
+
+function splitCustomValues(value) {
+  return String(value || "")
+    .split(",")
+    .map(entry => entry.trim())
+    .filter(Boolean);
+}
+
+function toggleOtherField(selectId, wrapId, inputId) {
+  const select = $(selectId);
+  const wrap = $(wrapId);
+  const input = $(inputId);
+
+  if (!select || !wrap || !input) return;
+
+  const isOther = select.value === "Other";
+  wrap.hidden = !isOther;
+
+  if (!isOther) {
+    input.value = "";
+  }
+}
+
+function setupOtherSelect(selectId, wrapId, inputId) {
+  const select = $(selectId);
+  if (!select) return;
+
+  select.addEventListener("change", () => {
+    toggleOtherField(selectId, wrapId, inputId);
+    previewProfit();
   });
+
+  toggleOtherField(selectId, wrapId, inputId);
+}
+
+function populatePlatforms() {
+  ["expectedPlatform", "actualSalePlatform"].forEach(id => {
+    const element = $(id);
+    if (!element) return;
+
+    element.innerHTML = platforms
+      .map(
+        platform =>
+          `<option value="${platform}">${platform || "Select platform"}</option>`
+      )
+      .join("");
+  });
+
+  const listingContainer = $("listingPlatforms");
+
+  if (listingContainer) {
+    const listingChoices = platforms.filter(Boolean);
+
+    listingContainer.innerHTML = listingChoices
+      .map(
+        platform => `
+          <label class="platform-check">
+            <input
+              type="checkbox"
+              name="listingPlatformChoice"
+              value="${escapeHtml(platform)}"
+            />
+            <span>${escapeHtml(platform)}</span>
+          </label>
+        `
+      )
+      .join("");
+
+    listingContainer
+      .querySelectorAll('input[name="listingPlatformChoice"]')
+      .forEach(input => {
+        input.addEventListener("change", () => {
+          updateListingPlatformSummary();
+
+          if (input.value === "Other") {
+            const wrap = $("customListingPlatformWrap");
+            if (wrap) wrap.hidden = !input.checked;
+
+            if (!input.checked && $("customListingPlatform")) {
+              $("customListingPlatform").value = "";
+            }
+          }
+
+          previewProfit();
+        });
+      });
+  }
+
+  updateListingPlatformSummary();
+
+  setupOtherSelect(
+    "expectedPlatform",
+    "customExpectedPlatformWrap",
+    "customExpectedPlatform"
+  );
+
+  setupOtherSelect(
+    "actualSalePlatform",
+    "customActualSalePlatformWrap",
+    "customActualSalePlatform"
+  );
+
+  setupOtherSelect(
+    "category",
+    "customCategoryWrap",
+    "customCategory"
+  );
+}
+
+function getSelectedListingPlatforms() {
+  const selected = Array.from(
+    document.querySelectorAll(
+      'input[name="listingPlatformChoice"]:checked'
+    )
+  ).map(input => input.value);
+
+  const customPlatforms = splitCustomValues(
+    $("customListingPlatform")?.value
+  );
+
+  return selected
+    .filter(platform => platform !== "Other")
+    .concat(customPlatforms);
+}
+
+function updateListingPlatformSummary() {
+  const summary = $("listingPlatformsSummary");
+  if (!summary) return;
+
+  const selected = getSelectedListingPlatforms();
+  const otherChecked = document.querySelector(
+    'input[name="listingPlatformChoice"][value="Other"]:checked'
+  );
+
+  const visibleSelected = selected.length
+    ? selected
+    : otherChecked
+      ? ["Other — enter details below"]
+      : [];
+
+  summary.textContent = visibleSelected.length
+    ? `Selected: ${visibleSelected.join(", ")}`
+    : "No platforms selected";
+}
+
+function setSelectedListingPlatforms(values) {
+  const normalized = Array.isArray(values)
+    ? values
+    : values
+      ? [values]
+      : [];
+
+  const knownChoices = platforms.filter(Boolean);
+  const customValues = normalized.filter(
+    value => !knownChoices.includes(value)
+  );
+
+  document
+    .querySelectorAll('input[name="listingPlatformChoice"]')
+    .forEach(input => {
+      if (input.value === "Other") {
+        input.checked = customValues.length > 0;
+      } else {
+        input.checked = normalized.includes(input.value);
+      }
+    });
+
+  if ($("customListingPlatform")) {
+    $("customListingPlatform").value = customValues.join(", ");
+  }
+
+  if ($("customListingPlatformWrap")) {
+    $("customListingPlatformWrap").hidden =
+      customValues.length === 0;
+  }
+
+  updateListingPlatformSummary();
 }
 
 function calculation(i) {
@@ -130,7 +303,24 @@ function calculation(i) {
   const listingEntered = number(i.listingPrice) > 0;
 
   const revenue = saleEntered ? number(i.salePrice) : (listingEntered ? number(i.listingPrice) : number(i.expectedSellingPrice));
-  const platform = saleEntered ? (i.listingPlatform || i.expectedPlatform || "") : (i.listingPlatform || i.expectedPlatform || "");
+  const listingPlatforms = Array.isArray(i.listingPlatforms)
+    ? i.listingPlatforms
+    : i.listingPlatform
+      ? [i.listingPlatform]
+      : [];
+
+  const platform = saleEntered
+    ? (
+        i.actualSalePlatform ||
+        i.expectedPlatform ||
+        listingPlatforms[0] ||
+        ""
+      )
+    : (
+        i.expectedPlatform ||
+        listingPlatforms[0] ||
+        ""
+      );
   const fee = saleEntered
     ? number(i.actualPlatformFee)
     : revenue * number(estimatedFeeRates[platform]);
@@ -198,7 +388,7 @@ function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
   const filtered = items.filter(i => {
-    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.colorMaterial || ""} ${i.authentication || ""} ${i.purchaseSource} ${i.notes}`.toLowerCase();
+    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.colorMaterial || ""} ${i.authentication || ""} ${(Array.isArray(i.listingPlatforms) ? i.listingPlatforms.join(" ") : (i.listingPlatform || ""))} ${i.purchaseSource} ${i.notes}`.toLowerCase();
     return (!term || haystack.includes(term)) && (!status || i.status === status);
   });
 
@@ -247,7 +437,12 @@ function renderItems() {
         <span class="muted">${held === null ? "" : `${held} day${held === 1 ? "" : "s"} held`}</span>
       </td>
       <td>${money(i.purchasePrice)}<span class="muted">${escapeHtml(i.purchaseDate || "")}</span></td>
-      <td>${money(i.listingPrice)}<span class="muted">${escapeHtml(i.listingPlatform || "")}</span></td>
+      <td>${money(i.listingPrice)}
+      <span class="muted">${escapeHtml(
+        Array.isArray(i.listingPlatforms)
+          ? i.listingPlatforms.join(", ")
+          : (i.listingPlatform || "")
+      )}</span></td>
       <td>${number(i.salePrice) ? money(i.salePrice) : "—"}<span class="muted">${escapeHtml(i.saleDate || "")}</span></td>
       <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}
         <span class="muted">${c.type}</span>
@@ -277,7 +472,16 @@ function maximumBuyPrice(item) {
     ? number(item.listingPrice)
     : number(item.expectedSellingPrice);
 
-  const platform = item.listingPlatform || item.expectedPlatform || "";
+  const listingPlatforms = Array.isArray(item.listingPlatforms)
+    ? item.listingPlatforms
+    : item.listingPlatform
+      ? [item.listingPlatform]
+      : [];
+
+  const platform =
+    item.expectedPlatform ||
+    listingPlatforms[0] ||
+    "";
   const feeRate = number(estimatedFeeRates[platform]);
   const estimatedFees = revenue * feeRate;
   const sellingCosts = number(item.shippingCosts);
@@ -380,11 +584,17 @@ function previewProfit() {
 }
 
 function readForm() {
-  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","category","status","colorMaterial","condition","accessories","authentication",
-    "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","expectedSellingPrice",
-    "recommendedMaxBuy","marketConfidence","listingDate","listingPlatform","listingPrice","salePrice","saleDate",
+  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","category","customCategory","status","colorMaterial","condition","accessories","authentication",
+    "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","customExpectedPlatform","expectedSellingPrice",
+    "recommendedMaxBuy","marketConfidence","listingDate","listingPrice","salePrice","saleDate","actualSalePlatform","customActualSalePlatform",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
-  return Object.fromEntries(fields.map(id => [id, $(id).value]));
+  const data = Object.fromEntries(
+    fields.map(id => [id, $(id)?.value ?? ""])
+  );
+
+  data.listingPlatforms = getSelectedListingPlatforms();
+
+  return data;
 }
 
 function setForm(item = null) {
@@ -397,6 +607,7 @@ function setForm(item = null) {
     customBrand: "",
     itemName: "",
     category: "Handbag",
+    customCategory: "",
     status: "Purchased",
     colorMaterial: "",
     condition: "Excellent",
@@ -407,11 +618,14 @@ function setForm(item = null) {
     purchasePrice: "",
     targetProfit: "25",
     expectedPlatform: "",
+    customExpectedPlatform: "",
     expectedSellingPrice: "",
     recommendedMaxBuy: "",
     marketConfidence: "Medium",
     listingDate: "",
-    listingPlatform: "",
+    listingPlatforms: [],
+    actualSalePlatform: "",
+    customActualSalePlatform: "",
     listingPrice: "",
     salePrice: "",
     saleDate: "",
@@ -441,12 +655,59 @@ function setForm(item = null) {
     values.brand = "Other";
   }
 
+  const knownCategories = [
+    "Handbag",
+    "Wallet",
+    "Accessory",
+    "Luggage",
+    "Clothing",
+    "Shoes",
+    "Other"
+  ];
+
+  if (
+    isEditing &&
+    values.category &&
+    !knownCategories.includes(values.category)
+  ) {
+    values.customCategory = values.category;
+    values.category = "Other";
+  }
+
+  const knownPlatforms = platforms.filter(Boolean);
+
+  if (
+    isEditing &&
+    values.expectedPlatform &&
+    !knownPlatforms.includes(values.expectedPlatform)
+  ) {
+    values.customExpectedPlatform = values.expectedPlatform;
+    values.expectedPlatform = "Other";
+  }
+
+  if (
+    isEditing &&
+    values.actualSalePlatform &&
+    !knownPlatforms.includes(values.actualSalePlatform)
+  ) {
+    values.customActualSalePlatform = values.actualSalePlatform;
+    values.actualSalePlatform = "Other";
+  }
+
   Object.keys(defaults).forEach(key => {
     const element = $(key);
     if (!element) return;
 
     element.value = values[key] ?? "";
   });
+
+  const existingListingPlatforms = Array.isArray(values.listingPlatforms)
+    ? values.listingPlatforms
+    : values.listingPlatform
+      ? [values.listingPlatform]
+      : [];
+
+  setSelectedListingPlatforms(existingListingPlatforms);
 
   $("editId").value = isEditing ? item.id : "";
   $("formTitle").textContent = isEditing ? "Edit Item" : "Add Item";
@@ -457,6 +718,24 @@ function setForm(item = null) {
   if ($("customBrandWrap")) {
     $("customBrandWrap").hidden = $("brand")?.value !== "Other";
   }
+
+  toggleOtherField(
+    "category",
+    "customCategoryWrap",
+    "customCategory"
+  );
+
+  toggleOtherField(
+    "expectedPlatform",
+    "customExpectedPlatformWrap",
+    "customExpectedPlatform"
+  );
+
+  toggleOtherField(
+    "actualSalePlatform",
+    "customActualSalePlatformWrap",
+    "customActualSalePlatform"
+  );
 
   previewProfit();
 }
@@ -498,12 +777,61 @@ async function saveItem(event) {
       data.brand = data.customBrand.trim();
     }
 
+    if (data.category === "Other") {
+      data.category = data.customCategory.trim();
+    }
+
+    if (data.expectedPlatform === "Other") {
+      data.expectedPlatform =
+        data.customExpectedPlatform.trim();
+    }
+
+    if (data.actualSalePlatform === "Other") {
+      data.actualSalePlatform =
+        data.customActualSalePlatform.trim();
+    }
+
     if (!data.brand.trim()) {
       throw new Error("Please select or enter a brand.");
     }
 
     if (!data.itemName.trim()) {
       throw new Error("Please enter an item or model name.");
+    }
+
+    if (!data.category.trim()) {
+      throw new Error("Please enter the Other category.");
+    }
+
+    const otherListingChecked = document.querySelector(
+      'input[name="listingPlatformChoice"][value="Other"]:checked'
+    );
+
+    if (
+      otherListingChecked &&
+      splitCustomValues($("customListingPlatform")?.value).length === 0
+    ) {
+      throw new Error(
+        "Please enter the Other listing platform."
+      );
+    }
+
+    if (
+      $("expectedPlatform")?.value === "Other" &&
+      !data.expectedPlatform.trim()
+    ) {
+      throw new Error(
+        "Please enter the Other expected platform."
+      );
+    }
+
+    if (
+      $("actualSalePlatform")?.value === "Other" &&
+      !data.actualSalePlatform.trim()
+    ) {
+      throw new Error(
+        "Please enter the Other actual sale platform."
+      );
     }
 
     if (
@@ -555,6 +883,14 @@ async function saveItem(event) {
       number(data.buyerPaidShipping);
 
     delete data.customBrand;
+    delete data.customCategory;
+    delete data.customExpectedPlatform;
+    delete data.customActualSalePlatform;
+    delete data.listingPlatform;
+
+    if (!Array.isArray(data.listingPlatforms)) {
+      data.listingPlatforms = [];
+    }
 
     data.updatedAt = serverTimestamp();
     data.updatedBy = auth.currentUser.email;
@@ -699,7 +1035,7 @@ $("searchInput").addEventListener("input", renderItems);
 $("statusFilter").addEventListener("change", renderItems);
 if ($("sortFilter")) $("sortFilter").addEventListener("change", renderItems);
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
-["purchasePrice","expectedSellingPrice","listingPrice","salePrice","actualPlatformFee","shippingCosts","buyerPaidShipping","expectedPlatform","listingPlatform"]
+["purchasePrice","expectedSellingPrice","listingPrice","salePrice","actualPlatformFee","shippingCosts","buyerPaidShipping","expectedPlatform","actualSalePlatform"]
   .forEach(id => $(id).addEventListener("input", previewProfit));
 
 window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecting…");

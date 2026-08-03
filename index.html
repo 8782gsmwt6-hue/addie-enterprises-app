@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.2.3" />
+  <link rel="stylesheet" href="styles.css?v=4.2.5" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -239,7 +239,22 @@
               <input id="customBrand" placeholder="Enter brand name" />
             </div>
             <div><label>Item / Model *</label><input id="itemName" required placeholder="Neverfull MM Monogram" /></div>
-            <div><label>Category</label><select id="category"><option>Handbag</option><option>Wallet</option><option>Accessory</option><option>Luggage</option><option>Clothing</option><option>Shoes</option><option>Other</option></select></div>
+            <div>
+              <label>Category</label>
+              <select id="category">
+                <option>Handbag</option>
+                <option>Wallet</option>
+                <option>Accessory</option>
+                <option>Luggage</option>
+                <option>Clothing</option>
+                <option>Shoes</option>
+                <option>Other</option>
+              </select>
+              <div id="customCategoryWrap" class="other-detail-wrap" hidden>
+                <label>Other Category</label>
+                <input id="customCategory" placeholder="Enter category" />
+              </div>
+            </div>
             <div>
               <label>Status</label>
               <select id="status">
@@ -268,7 +283,14 @@
             <div><label>Purchase Source</label><input id="purchaseSource" placeholder="Estate sale, auction, eBay" /></div>
             <div><label>Purchase Price (all in) *</label><input id="purchasePrice" type="number" min="0" step="0.01" required /></div>
             <div><label>Target ROI (%)</label><input id="targetProfit" type="number" min="0" step="0.1" value="25" /></div>
-            <div><label>Expected Sale Platform</label><select id="expectedPlatform"></select></div>
+            <div>
+              <label>Expected Sale Platform</label>
+              <select id="expectedPlatform"></select>
+              <div id="customExpectedPlatformWrap" class="other-detail-wrap" hidden>
+                <label>Other Expected Platform</label>
+                <input id="customExpectedPlatform" placeholder="Enter platform name" />
+              </div>
+            </div>
             <div><label>Expected Selling Price</label><input id="expectedSellingPrice" type="number" min="0" step="0.01" placeholder="850.00" /></div>
             <div><label>Recommended Max Buy</label><input id="recommendedMaxBuy" type="number" min="0" step="0.01" /></div>
             <div><label>Market Confidence</label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
@@ -329,10 +351,26 @@
           <div class="section-title">Listing and Actual Sale</div>
           <div class="form-grid four">
             <div><label>Listing Date</label><input id="listingDate" type="date" /></div>
-            <div><label>Listing Platform</label><select id="listingPlatform"></select></div>
+            <div class="platform-selection-field">
+              <label>Listed On — select all that apply</label>
+              <div id="listingPlatforms" class="platform-checkbox-grid"></div>
+              <div id="listingPlatformsSummary" class="selected-platform-summary">No platforms selected</div>
+              <div id="customListingPlatformWrap" class="other-detail-wrap" hidden>
+                <label>Other Listing Platform(s)</label>
+                <input id="customListingPlatform" placeholder="Enter one or more, separated by commas" />
+              </div>
+            </div>
             <div><label>Listing Price</label><input id="listingPrice" type="number" min="0" step="0.01" placeholder="899.00" /></div>
             <div><label>Actual Sale Price</label><input id="salePrice" type="number" min="0" step="0.01" placeholder="760.00" /></div>
             <div><label>Sale Date</label><input id="saleDate" type="date" /></div>
+            <div>
+              <label>Actual Sale Platform</label>
+              <select id="actualSalePlatform"></select>
+              <div id="customActualSalePlatformWrap" class="other-detail-wrap" hidden>
+                <label>Other Actual Sale Platform</label>
+                <input id="customActualSalePlatform" placeholder="Enter platform name" />
+              </div>
+            </div>
             <div><label>Actual Platform Fee</label><input id="actualPlatformFee" type="number" min="0" step="0.01" placeholder="76.00" /></div>
             <div><label>Shipping / Selling Costs</label><input id="shippingCosts" type="number" min="0" step="0.01" value="0" /></div>
             <div><label>Buyer-paid Shipping</label><input id="buyerPaidShipping" type="number" min="0" step="0.01" value="0" /></div>
@@ -400,6 +438,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.2.3"></script>
+<script type="module" src="app.js?v=4.2.5"></script>
 </body>
 </html>
