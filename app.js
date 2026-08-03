@@ -172,33 +172,56 @@ function populatePlatforms() {
     listingContainer.innerHTML = listingChoices
       .map(
         platform => `
-          <label class="platform-check">
-            <input
-              type="checkbox"
-              name="listingPlatformChoice"
-              value="${escapeHtml(platform)}"
-            />
+          <button
+            type="button"
+            class="platform-toggle"
+            data-platform="${escapeHtml(platform)}"
+            aria-pressed="false"
+          >
+            <span class="platform-toggle-check">✓</span>
             <span>${escapeHtml(platform)}</span>
-          </label>
+          </button>
         `
       )
       .join("");
 
     listingContainer
-      .querySelectorAll('input[name="listingPlatformChoice"]')
-      .forEach(input => {
-        input.addEventListener("change", () => {
-          updateListingPlatformSummary();
+      .querySelectorAll(".platform-toggle")
+      .forEach(button => {
+        button.addEventListener("click", () => {
+          const isSelected =
+            button.getAttribute("aria-pressed") === "true";
 
-          if (input.value === "Other") {
-            const wrap = $("customListingPlatformWrap");
-            if (wrap) wrap.hidden = !input.checked;
+          button.setAttribute(
+            "aria-pressed",
+            isSelected ? "false" : "true"
+          );
 
-            if (!input.checked && $("customListingPlatform")) {
+          button.classList.toggle(
+            "selected",
+            !isSelected
+          );
+
+          const platform =
+            button.dataset.platform || "";
+
+          if (platform === "Other") {
+            const wrap =
+              $("customListingPlatformWrap");
+
+            if (wrap) {
+              wrap.hidden = isSelected;
+            }
+
+            if (
+              isSelected &&
+              $("customListingPlatform")
+            ) {
               $("customListingPlatform").value = "";
             }
           }
 
+          updateListingPlatformSummary();
           previewProfit();
         });
       });
@@ -228,16 +251,16 @@ function populatePlatforms() {
 function getSelectedListingPlatforms() {
   const selected = Array.from(
     document.querySelectorAll(
-      'input[name="listingPlatformChoice"]:checked'
+      '.platform-toggle[aria-pressed="true"]'
     )
-  ).map(input => input.value);
+  ).map(button => button.dataset.platform || "");
 
   const customPlatforms = splitCustomValues(
     $("customListingPlatform")?.value
   );
 
   return selected
-    .filter(platform => platform !== "Other")
+    .filter(platform => platform && platform !== "Other")
     .concat(customPlatforms);
 }
 
@@ -247,7 +270,7 @@ function updateListingPlatformSummary() {
 
   const selected = getSelectedListingPlatforms();
   const otherChecked = document.querySelector(
-    'input[name="listingPlatformChoice"][value="Other"]:checked'
+    '.platform-toggle[data-platform="Other"][aria-pressed="true"]'
   );
 
   const visibleSelected = selected.length
@@ -274,17 +297,28 @@ function setSelectedListingPlatforms(values) {
   );
 
   document
-    .querySelectorAll('input[name="listingPlatformChoice"]')
-    .forEach(input => {
-      if (input.value === "Other") {
-        input.checked = customValues.length > 0;
-      } else {
-        input.checked = normalized.includes(input.value);
-      }
+    .querySelectorAll(".platform-toggle")
+    .forEach(button => {
+      const platform = button.dataset.platform || "";
+      const selected =
+        platform === "Other"
+          ? customValues.length > 0
+          : normalized.includes(platform);
+
+      button.setAttribute(
+        "aria-pressed",
+        selected ? "true" : "false"
+      );
+
+      button.classList.toggle(
+        "selected",
+        selected
+      );
     });
 
   if ($("customListingPlatform")) {
-    $("customListingPlatform").value = customValues.join(", ");
+    $("customListingPlatform").value =
+      customValues.join(", ");
   }
 
   if ($("customListingPlatformWrap")) {
@@ -804,7 +838,7 @@ async function saveItem(event) {
     }
 
     const otherListingChecked = document.querySelector(
-      'input[name="listingPlatformChoice"][value="Other"]:checked'
+      '.platform-toggle[data-platform="Other"][aria-pressed="true"]'
     );
 
     if (

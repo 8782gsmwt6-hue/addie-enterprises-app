@@ -557,3 +557,61 @@ input[type="number"]{
   border-style:dashed;
   background:#fffdf7;
 }
+
+
+/* v4.2.6 reliable iPad multi-platform toggle buttons */
+.platform-toggle{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-height:48px;
+  padding:10px 12px;
+  border:2px solid #e2e8f0;
+  border-radius:11px;
+  background:#ffffff;
+  color:#172b43;
+  font:inherit;
+  font-weight:800;
+  text-align:left;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+
+.platform-toggle-check{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:23px;
+  height:23px;
+  flex:0 0 23px;
+  border:2px solid #94a3b8;
+  border-radius:6px;
+  color:transparent;
+  font-size:.86rem;
+  line-height:1;
+}
+
+.platform-toggle.selected,
+.platform-toggle[aria-pressed="true"]{
+  border-color:#b98a46;
+  background:#fff7e6;
+  box-shadow:0 0 0 2px rgba(185,138,70,.12);
+}
+
+.platform-toggle.selected .platform-toggle-check,
+.platform-toggle[aria-pressed="true"] .platform-toggle-check{
+  border-color:#b98a46;
+  background:#b98a46;
+  color:#ffffff;
+}
+
+.platform-toggle:active{
+  transform:scale(.99);
+}
+
+/* Hide legacy checkbox styling if an older cached fragment appears */
+.platform-check{
+  display:none !important;
+}
