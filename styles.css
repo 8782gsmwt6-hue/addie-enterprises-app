@@ -733,3 +733,34 @@ input[type="number"]{
     grid-template-columns:1fr 1fr;
   }
 }
+
+
+/* v4.3.2 standalone Deal Analyzer */
+.deal-workspace{
+  overflow:visible;
+}
+
+.deal-input-grid{
+  margin-bottom:24px;
+}
+
+#deal .deal-analyzer-card{
+  margin-top:26px;
+}
+
+#deal .form-heading .actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+@media(max-width:700px){
+  #deal .form-heading .actions{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+
+  #deal .form-heading .actions button{
+    width:100%;
+  }
+}

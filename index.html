@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.3.1" />
+  <link rel="stylesheet" href="styles.css?v=4.3.2" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -84,6 +84,7 @@
     <main>
       <nav class="tabs" aria-label="Main navigation">
         <button class="tab active" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="deal">Deal Analyzer</button>
         <button class="tab" data-tab="items">Items</button>
         <button class="tab" data-tab="add">Add / Edit Item</button>
         <button class="tab" data-tab="settings">Settings</button>
@@ -105,7 +106,143 @@
         </div>
       </section>
 
-      <section id="items" class="panel">
+      
+      <section id="deal" class="panel">
+        <div class="card deal-workspace">
+          <div class="form-heading">
+            <div>
+              <h2>Deal Analyzer</h2>
+              <p>Evaluate a potential purchase before adding it to inventory.</p>
+            </div>
+            <div class="actions">
+              <button type="button" class="secondary" id="clearDealBtn">Clear</button>
+              <button type="button" class="primary" id="addDealToInventoryBtn">Add This Deal to Inventory</button>
+            </div>
+          </div>
+
+          <div class="section-title">Potential Purchase</div>
+
+          <div class="form-grid four deal-input-grid">
+            <div>
+              <label>Brand</label>
+              <select id="dealBrand"><option value="">Select brand</option></select>
+              <div id="dealCustomBrandWrap" class="other-detail-wrap" hidden>
+                <label>Other Brand</label>
+                <input id="dealCustomBrand" placeholder="Enter brand name" />
+              </div>
+            </div>
+
+            <div>
+              <label>Item / Model</label>
+              <input id="dealItemName" placeholder="Neverfull MM, Cassette, wallet..." />
+            </div>
+
+            <div>
+              <label>Condition</label>
+              <select id="dealCondition">
+                <option>New</option>
+                <option selected>Excellent</option>
+                <option>Very Good</option>
+                <option>Good</option>
+                <option>Fair</option>
+                <option>Poor</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Market Confidence</label>
+              <select id="dealMarketConfidence">
+                <option>High</option>
+                <option selected>Medium</option>
+                <option>Low</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Asking / Purchase Price</label>
+              <input id="dealPurchasePrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="425.00" />
+            </div>
+
+            <div>
+              <label>Expected Selling Price</label>
+              <input id="dealExpectedSellingPrice" type="number" inputmode="decimal" min="0" step="0.01" placeholder="685.00" />
+            </div>
+
+            <div>
+              <label>Expected Sale Platform</label>
+              <select id="dealExpectedPlatform"></select>
+            </div>
+
+            <div>
+              <label>Target ROI (%)</label>
+              <input id="dealTargetProfit" type="number" inputmode="decimal" min="0" step="1" value="25" />
+            </div>
+
+            <div>
+              <label>Shipping / Selling Costs</label>
+              <input id="dealShippingCosts" type="number" inputmode="decimal" min="0" step="0.01" value="0" />
+            </div>
+
+            <div>
+              <label>Buyer-paid Shipping</label>
+              <input id="dealBuyerPaidShipping" type="number" inputmode="decimal" min="0" step="0.01" value="0" />
+            </div>
+          </div>
+
+          <section class="deal-analyzer-card deal-neutral" id="dealAnalyzerCard">
+            <div class="deal-meter-header">
+              <div>
+                <div class="eyebrow">LIVE DEAL ANALYZER</div>
+                <h3 id="dealRecommendation">Enter pricing details</h3>
+                <p id="dealReason">
+                  Enter a purchase price, expected or listing price, platform, and target ROI.
+                </p>
+              </div>
+
+              <div class="deal-score-wrap">
+                <span class="deal-score-label">Opportunity Score</span>
+                <strong id="dealScore">—</strong>
+              </div>
+            </div>
+
+            <div class="deal-primary-results">
+              <div class="deal-hero-result">
+                <span>Maximum Recommended Buy</span>
+                <strong id="dealMaxBuy">$0.00</strong>
+              </div>
+
+              <div class="deal-hero-result">
+                <span>Projected Profit</span>
+                <strong id="dealProfit">$0.00</strong>
+              </div>
+
+              <div class="deal-hero-result">
+                <span>Projected ROI</span>
+                <strong id="dealRoi">0.0%</strong>
+              </div>
+            </div>
+
+            <div class="deal-breakdown">
+              <div>
+                <span>Revenue Basis</span>
+                <strong id="dealRevenue">$0.00</strong>
+              </div>
+
+              <div>
+                <span>Estimated Platform Fees</span>
+                <strong id="dealFees">$0.00</strong>
+              </div>
+
+              <div>
+                <span>Shipping / Selling Costs</span>
+                <strong id="dealCosts">$0.00</strong>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+<section id="items" class="panel">
         <div class="card">
           <div class="toolbar">
             <input id="searchInput" placeholder="Search brand, item, source, notes…" />
@@ -333,60 +470,7 @@
             <div><label>Recommended Max Buy</label><input id="recommendedMaxBuy" type="number" min="0" step="0.01" /></div>
             <div><label>Market Confidence</label><select id="marketConfidence"><option>Low</option><option selected>Medium</option><option>High</option></select></div>
           </div>
-
-
-          <section class="deal-analyzer-card deal-neutral" id="dealAnalyzerCard">
-            <div class="deal-meter-header">
-              <div>
-                <div class="eyebrow">LIVE DEAL ANALYZER</div>
-                <h3 id="dealRecommendation">Enter pricing details</h3>
-                <p id="dealReason">
-                  Enter a purchase price, expected or listing price, platform, and target ROI.
-                </p>
-              </div>
-
-              <div class="deal-score-wrap">
-                <span class="deal-score-label">Opportunity Score</span>
-                <strong id="dealScore">—</strong>
-              </div>
-            </div>
-
-            <div class="deal-primary-results">
-              <div class="deal-hero-result">
-                <span>Maximum Recommended Buy</span>
-                <strong id="dealMaxBuy">$0.00</strong>
-              </div>
-
-              <div class="deal-hero-result">
-                <span>Projected Profit</span>
-                <strong id="dealProfit">$0.00</strong>
-              </div>
-
-              <div class="deal-hero-result">
-                <span>Projected ROI</span>
-                <strong id="dealRoi">0.0%</strong>
-              </div>
-            </div>
-
-            <div class="deal-breakdown">
-              <div>
-                <span>Revenue Basis</span>
-                <strong id="dealRevenue">$0.00</strong>
-              </div>
-
-              <div>
-                <span>Estimated Platform Fees</span>
-                <strong id="dealFees">$0.00</strong>
-              </div>
-
-              <div>
-                <span>Shipping / Selling Costs</span>
-                <strong id="dealCosts">$0.00</strong>
-              </div>
-            </div>
-          </section>
-
-          <div class="section-title">Listing and Actual Sale</div>
+<div class="section-title">Listing and Actual Sale</div>
           <div class="form-grid four">
             <div><label>Listing Date</label><input id="listingDate" type="date" /></div>
             <div class="platform-selection-field">
@@ -498,6 +582,6 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.3.1"></script>
+<script type="module" src="app.js?v=4.3.2"></script>
 </body>
 </html>

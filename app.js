@@ -220,6 +220,138 @@ function setupOtherSelect(selectId, wrapId, inputId) {
   toggleOtherField(selectId, wrapId, inputId);
 }
 
+
+function populateDealAnalyzerFields() {
+  const sourceBrand = $("brand");
+  const dealBrand = $("dealBrand");
+
+  if (sourceBrand && dealBrand) {
+    dealBrand.innerHTML = sourceBrand.innerHTML;
+  }
+
+  const dealPlatform = $("dealExpectedPlatform");
+
+  if (dealPlatform) {
+    dealPlatform.innerHTML = platforms
+      .map(
+        platform =>
+          `<option value="${platform}">${platform || "Select platform"}</option>`
+      )
+      .join("");
+  }
+}
+
+function readDealForm() {
+  const brandSelection = $("dealBrand")?.value || "";
+  const customBrand = $("dealCustomBrand")?.value.trim() || "";
+
+  return {
+    brand: brandSelection === "Other" ? customBrand : brandSelection,
+    itemName: $("dealItemName")?.value || "",
+    condition: $("dealCondition")?.value || "Excellent",
+    marketConfidence: $("dealMarketConfidence")?.value || "Medium",
+    purchasePrice: $("dealPurchasePrice")?.value || "",
+    expectedSellingPrice: $("dealExpectedSellingPrice")?.value || "",
+    expectedPlatform: $("dealExpectedPlatform")?.value || "",
+    targetProfit: $("dealTargetProfit")?.value || "25",
+    shippingCosts: $("dealShippingCosts")?.value || "0",
+    buyerPaidShipping: $("dealBuyerPaidShipping")?.value || "0",
+    listingPrice: "",
+    salePrice: "",
+    actualPlatformFee: "",
+    actualSalePlatform: "",
+    listingPlatforms: []
+  };
+}
+
+function renderStandaloneDealAnalyzer() {
+  const analysis = dealAnalysis(readDealForm());
+  const card = $("dealAnalyzerCard");
+
+  if (!card) return;
+
+  card.classList.remove(
+    "deal-buy",
+    "deal-negotiate",
+    "deal-pass",
+    "deal-neutral"
+  );
+
+  card.classList.add(`deal-${analysis.state}`);
+
+  $("dealRecommendation").textContent = analysis.recommendation;
+  $("dealReason").textContent = analysis.reason;
+  $("dealScore").textContent =
+    analysis.score === null ? "—" : `${analysis.score}/100`;
+  $("dealRevenue").textContent = money(analysis.revenue);
+  $("dealFees").textContent = money(analysis.fee);
+  $("dealCosts").textContent =
+    money(number(readDealForm().shippingCosts));
+  $("dealMaxBuy").textContent = money(analysis.maxBuy);
+  $("dealProfit").textContent = money(analysis.profit);
+  $("dealRoi").textContent = pct(analysis.roi);
+}
+
+function clearDealAnalyzer() {
+  [
+    "dealItemName",
+    "dealPurchasePrice",
+    "dealExpectedSellingPrice",
+    "dealCustomBrand"
+  ].forEach(id => {
+    if ($(id)) $(id).value = "";
+  });
+
+  if ($("dealBrand")) $("dealBrand").value = "";
+  if ($("dealCondition")) $("dealCondition").value = "Excellent";
+  if ($("dealMarketConfidence")) $("dealMarketConfidence").value = "Medium";
+  if ($("dealExpectedPlatform")) $("dealExpectedPlatform").value = "";
+  if ($("dealTargetProfit")) $("dealTargetProfit").value = "25";
+  if ($("dealShippingCosts")) $("dealShippingCosts").value = "0";
+  if ($("dealBuyerPaidShipping")) $("dealBuyerPaidShipping").value = "0";
+  if ($("dealCustomBrandWrap")) $("dealCustomBrandWrap").hidden = true;
+
+  renderStandaloneDealAnalyzer();
+}
+
+function addDealToInventory() {
+  const deal = readDealForm();
+  setForm(null);
+
+  const brandSelect = $("brand");
+  const knownBrands = brandSelect
+    ? Array.from(brandSelect.options).map(option => option.value)
+    : [];
+
+  if (deal.brand && !knownBrands.includes(deal.brand)) {
+    if ($("brand")) $("brand").value = "Other";
+    if ($("customBrand")) $("customBrand").value = deal.brand;
+    if ($("customBrandWrap")) $("customBrandWrap").hidden = false;
+  } else if ($("brand")) {
+    $("brand").value = deal.brand || "";
+  }
+
+  const mapping = {
+    itemName: deal.itemName,
+    condition: deal.condition,
+    marketConfidence: deal.marketConfidence,
+    purchasePrice: deal.purchasePrice,
+    expectedSellingPrice: deal.expectedSellingPrice,
+    expectedPlatform: deal.expectedPlatform,
+    targetProfit: deal.targetProfit,
+    shippingCosts: deal.shippingCosts,
+    buyerPaidShipping: deal.buyerPaidShipping
+  };
+
+  Object.entries(mapping).forEach(([id, value]) => {
+    if ($(id)) $(id).value = value ?? "";
+  });
+
+  $("formTitle").textContent = "Add Item";
+  previewProfit();
+  showTab("add");
+}
+
 function populatePlatforms() {
   ["expectedPlatform", "actualSalePlatform"].forEach(id => {
     const element = $(id);
@@ -647,30 +779,7 @@ function dealAnalysis(item) {
 }
 
 function renderDealAnalyzer() {
-  const item = readForm();
-  const analysis = dealAnalysis(item);
-  const card = $("dealAnalyzerCard");
-
-  if (!card) return;
-
-  card.classList.remove("deal-buy", "deal-negotiate", "deal-pass", "deal-neutral");
-  card.classList.add(`deal-${analysis.state}`);
-
-  $("dealRecommendation").textContent = analysis.recommendation;
-  $("dealReason").textContent = analysis.reason;
-  $("dealScore").textContent = analysis.score === null ? "—" : `${analysis.score}/100`;
-  $("dealRevenue").textContent = money(analysis.revenue);
-  $("dealFees").textContent = money(analysis.fee);
-  $("dealCosts").textContent = money(number(item.shippingCosts));
-  $("dealMaxBuy").textContent = money(analysis.maxBuy);
-  $("dealProfit").textContent = money(analysis.profit);
-  $("dealRoi").textContent = pct(analysis.roi);
-
-  if ($("recommendedMaxBuy")) {
-    $("recommendedMaxBuy").value = analysis.maxBuy > 0
-      ? analysis.maxBuy.toFixed(2)
-      : "";
-  }
+  renderStandaloneDealAnalyzer();
 }
 
 function previewProfit() {
@@ -683,7 +792,6 @@ function previewProfit() {
     <div class="preview-cell"><div class="k">${c.saleEntered ? "Actual" : "Estimated"} Fees</div><div class="v">${money(c.fee)}</div></div>
     <div class="preview-cell"><div class="k">Profit</div><div class="v ${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</div></div>
     <div class="preview-cell"><div class="k">ROI</div><div class="v">${pct(c.roi)}</div></div>`;
-  renderDealAnalyzer();
 }
 
 function readForm() {
@@ -1471,6 +1579,50 @@ $("deleteCurrentBtn").onclick = () => removeItem($("editId").value);
 $("searchInput").addEventListener("input", renderItems);
 $("statusFilter").addEventListener("change", renderItems);
 if ($("sortFilter")) $("sortFilter").addEventListener("change", renderItems);
+
+[
+  "dealBrand",
+  "dealCustomBrand",
+  "dealItemName",
+  "dealCondition",
+  "dealMarketConfidence",
+  "dealPurchasePrice",
+  "dealExpectedSellingPrice",
+  "dealExpectedPlatform",
+  "dealTargetProfit",
+  "dealShippingCosts",
+  "dealBuyerPaidShipping"
+].forEach(id => {
+  const element = $(id);
+  if (!element) return;
+
+  const eventName =
+    element.tagName === "SELECT" ? "change" : "input";
+
+  element.addEventListener(eventName, () => {
+    if (id === "dealBrand" && $("dealCustomBrandWrap")) {
+      const isOther =
+        $("dealBrand").value === "Other";
+
+      $("dealCustomBrandWrap").hidden = !isOther;
+
+      if (!isOther && $("dealCustomBrand")) {
+        $("dealCustomBrand").value = "";
+      }
+    }
+
+    renderStandaloneDealAnalyzer();
+  });
+});
+
+if ($("clearDealBtn")) {
+  $("clearDealBtn").onclick = clearDealAnalyzer;
+}
+
+if ($("addDealToInventoryBtn")) {
+  $("addDealToInventoryBtn").onclick = addDealToInventory;
+}
+
 document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.dataset.tab));
 ["purchasePrice","expectedSellingPrice","listingPrice","salePrice","actualPlatformFee","shippingCosts","buyerPaidShipping","expectedPlatform","actualSalePlatform"]
   .forEach(id => $(id).addEventListener("input", previewProfit));
@@ -1479,4 +1631,6 @@ window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecti
 window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
 
 populatePlatforms();
+populateDealAnalyzerFields();
 previewProfit();
+renderStandaloneDealAnalyzer();
