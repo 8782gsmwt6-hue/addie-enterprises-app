@@ -987,3 +987,39 @@ input[type="number"]{
 .metric .sub{
   line-height:1.35;
 }
+
+
+/* v4.4.4 dashboard item click-through */
+.dashboard-item-row{
+  cursor:pointer;
+  transition:background-color .18s ease, transform .18s ease;
+}
+
+.dashboard-item-row:hover,
+.dashboard-item-row:focus{
+  background:#fff8e8;
+  outline:none;
+}
+
+.dashboard-item-row:active{
+  transform:scale(.998);
+}
+
+.item-row-highlight{
+  animation:itemRowHighlight 2.4s ease;
+}
+
+@keyframes itemRowHighlight{
+  0%{
+    background:#f7df9b;
+    box-shadow:inset 4px 0 0 #b98a46;
+  }
+  70%{
+    background:#fff8e8;
+    box-shadow:inset 4px 0 0 #b98a46;
+  }
+  100%{
+    background:transparent;
+    box-shadow:inset 0 0 0 transparent;
+  }
+}

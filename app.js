@@ -32,6 +32,7 @@ let unsubscribeItems = null;
 let unsubscribeTeamMembers = null;
 let unsubscribeAccessRequests = null;
 let currentMember = null;
+let pendingItemHighlightId = null;
 let saveInProgress = false;
 const $ = id => document.getElementById(id);
 const number = v => Number(v || 0);
@@ -1002,7 +1003,7 @@ function renderDashboardRows() {
         const result = calculation(item);
 
         if (result.isInventoryOnly) {
-          return `<tr>
+          return `<tr class="dashboard-item-row" data-item-id="${item.id}" tabindex="0" role="button" aria-label="Open ${escapeHtml(item.brand)} ${escapeHtml(item.itemName)} in Items">
             <td>
               <strong>${item.favorite ? "⭐ " : ""}${escapeHtml(item.brand)} ${escapeHtml(item.itemName)}</strong>
               <span class="muted">${escapeHtml(item.inventoryNumber || "")}</span>
@@ -1017,7 +1018,7 @@ function renderDashboardRows() {
           </tr>`;
         }
 
-        return `<tr>
+        return `<tr class="dashboard-item-row" data-item-id="${item.id}" tabindex="0" role="button" aria-label="Open ${escapeHtml(item.brand)} ${escapeHtml(item.itemName)} in Items">
           <td>
             <strong>${item.favorite ? "⭐ " : ""}${escapeHtml(item.brand)} ${escapeHtml(item.itemName)}</strong>
             <span class="muted">${escapeHtml(item.inventoryNumber || "")}</span>
@@ -1036,7 +1037,58 @@ function renderDashboardRows() {
         </tr>`;
       }).join("")
     : `<tr><td colspan="6" class="empty">No items yet.</td></tr>`;
+
+  document.querySelectorAll(".dashboard-item-row").forEach(row => {
+    const openItem = () => openItemFromDashboard(row.dataset.itemId);
+
+    row.addEventListener("click", openItem);
+    row.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openItem();
+      }
+    });
+  });
 }
+
+function openItemFromDashboard(itemId) {
+  const item = items.find(entry => entry.id === itemId);
+  if (!item) return;
+
+  pendingItemHighlightId = itemId;
+
+  if ($("searchInput")) {
+    $("searchInput").value = "";
+  }
+
+  if ($("statusFilter")) {
+    $("statusFilter").value = "";
+  }
+
+  showTab("items");
+  renderItems();
+
+  requestAnimationFrame(() => {
+    const target = document.querySelector(
+      `#itemRows tr[data-item-id="${itemId}"]`
+    );
+
+    if (!target) return;
+
+    target.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    target.classList.add("item-row-highlight");
+
+    setTimeout(() => {
+      target.classList.remove("item-row-highlight");
+      pendingItemHighlightId = null;
+    }, 2400);
+  });
+}
+
 function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
