@@ -223,6 +223,35 @@ function setupOtherSelect(selectId, wrapId, inputId) {
 
 
 const helpContent = {
+
+  itemType: {
+    title: "Type",
+    body: `
+      <p><strong>What it means:</strong> The functional product type, such as Tote, Crossbody, Wallet, Clutch, or Sunglasses.</p>
+      <p><strong>Why it matters:</strong> Type makes filtering and profitability analysis much more useful.</p>
+      <p><strong>Source:</strong> User-entered or imported from the item description.</p>
+    `
+  },
+
+  color: {
+    title: "Color",
+    body: `
+      <p><strong>What it means:</strong> The item's primary visible color.</p>
+      <p><strong>Tip:</strong> Use the dominant color. Add secondary colors in Notes when needed.</p>
+      <p><strong>Source:</strong> User-entered or imported from the item description.</p>
+    `
+  },
+
+  materialPattern: {
+    title: "Material / Pattern",
+    body: `
+      <p><strong>What it means:</strong> The material, signature canvas, weave, or recognizable pattern.</p>
+      <p><strong>Examples:</strong> Saffiano, Intrecciato, Monogram Canvas, House Check, Zucca, Calfskin, or Patent Leather.</p>
+      <p><strong>Why it matters:</strong> Material and pattern can materially affect resale value and demand.</p>
+      <p><strong>Source:</strong> User-entered or imported from the item description.</p>
+    `
+  },
+
   purchasePrice: {
     title: "Purchase Price",
     body: `
@@ -854,7 +883,7 @@ function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
   const filtered = items.filter(i => {
-    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.colorMaterial || ""} ${i.authentication || ""} ${(Array.isArray(i.listingPlatforms) ? i.listingPlatforms.join(" ") : (i.listingPlatform || ""))} ${i.purchaseSource} ${i.notes}`.toLowerCase();
+    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.itemType || i.category || ""} ${i.color || ""} ${i.materialPattern || i.colorMaterial || ""} ${i.authentication || ""} ${(Array.isArray(i.listingPlatforms) ? i.listingPlatforms.join(" ") : (i.listingPlatform || ""))} ${i.purchaseSource} ${i.notes}`.toLowerCase();
     return (!term || haystack.includes(term)) && (!status || i.status === status);
   });
 
@@ -900,6 +929,11 @@ function renderItems() {
           <span class="inventory-number">${escapeHtml(i.inventoryNumber || "Unnumbered")}</span>
         </div>
         <span class="muted">${escapeHtml(i.itemName)}</span>
+        <span class="muted">${escapeHtml(
+          [i.itemType || i.category, i.color, i.materialPattern || i.colorMaterial]
+            .filter(Boolean)
+            .join(" · ")
+        )}</span>
         <span class="muted">${held === null ? "" : `${held} day${held === 1 ? "" : "s"} held`}</span>
       </td>
       <td>${money(i.purchasePrice)}<span class="muted">${escapeHtml(i.purchaseDate || "")}</span></td>
@@ -1026,7 +1060,7 @@ function previewProfit() {
 }
 
 function readForm() {
-  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","category","customCategory","status","colorMaterial","condition","accessories","authentication",
+  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","itemType","customItemType","color","customColor","materialPattern","customMaterialPattern","status","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","customExpectedPlatform","expectedSellingPrice",
     "recommendedMaxBuy","marketConfidence","listingDate","listingPrice","salePrice","saleDate","actualSalePlatform","customActualSalePlatform",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
@@ -1048,10 +1082,13 @@ function setForm(item = null) {
     brand: "",
     customBrand: "",
     itemName: "",
-    category: "Handbag",
-    customCategory: "",
+    itemType: "Handbag",
+    customItemType: "",
+    color: "",
+    customColor: "",
+    materialPattern: "",
+    customMaterialPattern: "",
     status: "Purchased",
-    colorMaterial: "",
     condition: "Excellent",
     accessories: "",
     authentication: "Not authenticated",
@@ -1087,6 +1124,39 @@ function setForm(item = null) {
       }
     : { ...defaults };
 
+  // Backward compatibility for older inventory records.
+  if (isEditing) {
+    if (!values.itemType && item.category) {
+      values.itemType = item.category;
+    }
+
+    if ((!values.color || !values.materialPattern) && item.colorMaterial) {
+      const legacy = String(item.colorMaterial).trim();
+
+      const knownColors = [
+        "Black", "Brown", "Beige", "Tan", "White", "Gray", "Red",
+        "Burgundy", "Pink", "Purple", "Blue", "Navy", "Green",
+        "Yellow", "Orange", "Gold", "Silver", "Multicolor"
+      ];
+
+      const matchingColor = knownColors.find(colorName =>
+        legacy.toLowerCase().includes(colorName.toLowerCase())
+      );
+
+      if (!values.color && matchingColor) {
+        values.color = matchingColor;
+      }
+
+      if (!values.materialPattern) {
+        const remainder = matchingColor
+          ? legacy.replace(new RegExp(matchingColor, "i"), "").trim()
+          : legacy;
+
+        values.materialPattern = remainder;
+      }
+    }
+  }
+
   const brandSelect = $("brand");
   const knownBrands = brandSelect
     ? Array.from(brandSelect.options).map(option => option.value)
@@ -1097,23 +1167,56 @@ function setForm(item = null) {
     values.brand = "Other";
   }
 
-  const knownCategories = [
-    "Handbag",
-    "Wallet",
-    "Accessory",
-    "Luggage",
-    "Clothing",
-    "Shoes",
-    "Other"
+  const knownItemTypes = [
+    "Handbag", "Tote", "Shoulder Bag", "Crossbody", "Satchel",
+    "Hobo", "Bucket Bag", "Clutch", "Wallet", "Wristlet", "Pouch",
+    "Backpack", "Duffel", "Briefcase", "Messenger", "Belt Bag",
+    "Travel Bag", "Luggage", "Shoes", "Boots", "Sneakers",
+    "Sandals", "Heels", "Scarf", "Belt", "Jewelry", "Watch",
+    "Sunglasses", "Accessory", "Other"
   ];
 
   if (
     isEditing &&
-    values.category &&
-    !knownCategories.includes(values.category)
+    values.itemType &&
+    !knownItemTypes.includes(values.itemType)
   ) {
-    values.customCategory = values.category;
-    values.category = "Other";
+    values.customItemType = values.itemType;
+    values.itemType = "Other";
+  }
+
+  const knownColors = [
+    "Black", "Brown", "Beige", "Tan", "White", "Gray", "Red",
+    "Burgundy", "Pink", "Purple", "Blue", "Navy", "Green",
+    "Yellow", "Orange", "Gold", "Silver", "Multicolor", "Other"
+  ];
+
+  if (
+    isEditing &&
+    values.color &&
+    !knownColors.includes(values.color)
+  ) {
+    values.customColor = values.color;
+    values.color = "Other";
+  }
+
+  const knownMaterials = [
+    "Monogram Canvas", "Damier Ebene", "Damier Azur", "Empreinte",
+    "Epi", "Vernis", "Monogram Vernis", "Taiga", "Mahina",
+    "Saffiano", "Pebbled Leather", "Smooth Leather", "Calfskin",
+    "Lambskin", "Caviar", "Patent Leather", "Canvas", "Nylon",
+    "Denim", "Raffia", "Intrecciato", "House Check", "Nova Check",
+    "GG Canvas", "GG Supreme", "Zucca", "Crocodile", "Python",
+    "Suede", "Cotton", "Other"
+  ];
+
+  if (
+    isEditing &&
+    values.materialPattern &&
+    !knownMaterials.includes(values.materialPattern)
+  ) {
+    values.customMaterialPattern = values.materialPattern;
+    values.materialPattern = "Other";
   }
 
   const knownPlatforms = platforms.filter(Boolean);
@@ -1162,9 +1265,21 @@ function setForm(item = null) {
   }
 
   toggleOtherField(
-    "category",
-    "customCategoryWrap",
-    "customCategory"
+    "itemType",
+    "customItemTypeWrap",
+    "customItemType"
+  );
+
+  toggleOtherField(
+    "color",
+    "customColorWrap",
+    "customColor"
+  );
+
+  toggleOtherField(
+    "materialPattern",
+    "customMaterialPatternWrap",
+    "customMaterialPattern"
   );
 
   toggleOtherField(
@@ -1219,8 +1334,16 @@ async function saveItem(event) {
       data.brand = data.customBrand.trim();
     }
 
-    if (data.category === "Other") {
-      data.category = data.customCategory.trim();
+    if (data.itemType === "Other") {
+      data.itemType = data.customItemType.trim();
+    }
+
+    if (data.color === "Other") {
+      data.color = data.customColor.trim();
+    }
+
+    if (data.materialPattern === "Other") {
+      data.materialPattern = data.customMaterialPattern.trim();
     }
 
     if (data.expectedPlatform === "Other") {
@@ -1241,8 +1364,19 @@ async function saveItem(event) {
       throw new Error("Please enter an item or model name.");
     }
 
-    if (!data.category.trim()) {
-      throw new Error("Please enter the Other category.");
+    if (!data.itemType.trim()) {
+      throw new Error("Please select or enter the item type.");
+    }
+
+    if ($("color")?.value === "Other" && !data.color.trim()) {
+      throw new Error("Please enter the Other color.");
+    }
+
+    if (
+      $("materialPattern")?.value === "Other" &&
+      !data.materialPattern.trim()
+    ) {
+      throw new Error("Please enter the Other material or pattern.");
     }
 
     const otherListingChecked = document.querySelector(
@@ -1325,9 +1459,13 @@ async function saveItem(event) {
       number(data.buyerPaidShipping);
 
     delete data.customBrand;
-    delete data.customCategory;
+    delete data.customItemType;
+    delete data.customColor;
+    delete data.customMaterialPattern;
     delete data.customExpectedPlatform;
     delete data.customActualSalePlatform;
+    delete data.category;
+    delete data.colorMaterial;
     delete data.listingPlatform;
 
     if (!Array.isArray(data.listingPlatforms)) {

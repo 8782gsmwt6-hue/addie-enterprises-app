@@ -914,3 +914,18 @@ input[type="number"]{
     padding:24px 20px;
   }
 }
+
+
+/* v4.4 schema upgrade */
+#itemType,
+#color,
+#materialPattern{
+  width:100%;
+}
+
+.schema-detail-line{
+  display:block;
+  margin-top:4px;
+  color:#64748b;
+  font-size:.78rem;
+}
