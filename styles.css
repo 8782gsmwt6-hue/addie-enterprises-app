@@ -936,3 +936,38 @@ input[type="number"]{
 #dealSize{
   width:100%;
 }
+
+
+/* v4.4.2 inventory import */
+.import-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+  margin:18px 0;
+}
+
+.import-warning{
+  margin:16px 0;
+  padding:14px 16px;
+  border:1px solid #e9c46a;
+  border-radius:12px;
+  background:#fff8e5;
+  color:#6f5313;
+  line-height:1.45;
+}
+
+.import-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+
+@media(max-width:760px){
+  .import-summary-grid{
+    grid-template-columns:1fr;
+  }
+
+  .import-actions button{
+    width:100%;
+  }
+}

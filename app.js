@@ -1,4 +1,5 @@
 import { firebaseConfig, WORKSPACE_ID, OWNER_EMAIL } from "./firebase-config.js";
+import { inventoryImportRecords } from "./inventory-import-data.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut
@@ -843,6 +844,10 @@ document.addEventListener("keydown", event => {
     closeInfoModal();
   }
 });
+
+if ($("runInventoryImportBtn")) {
+  $("runInventoryImportBtn").addEventListener("click", runInventoryImport);
+}
 
 document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
   document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === id));
@@ -1792,6 +1797,88 @@ async function loadMemberAccess(user) {
   return null;
 }
 
+
+function renderImportPreview() {
+  const body = $("importPreviewRows");
+  if (!body) return;
+
+  body.innerHTML = inventoryImportRecords.map(record => `
+    <tr>
+      <td><strong>${escapeHtml(record.brand)}</strong></td>
+      <td>${escapeHtml([record.itemName, record.size].filter(Boolean).join(" · ") || "—")}</td>
+      <td>${escapeHtml(record.itemType || "—")}</td>
+      <td>${escapeHtml([record.color, record.materialPattern].filter(Boolean).join(" · ") || "—")}</td>
+      <td>${money(record.purchasePrice)}</td>
+      <td>${record.listingPrice ? money(record.listingPrice) : "Not listed"}</td>
+      <td>${escapeHtml(record.status)}</td>
+    </tr>
+  `).join("");
+}
+
+async function runInventoryImport() {
+  if (!isTeamAdmin(currentMember)) {
+    $("importProgress").className = "message error";
+    $("importProgress").textContent = "Only an Owner or Admin can run the inventory import.";
+    return;
+  }
+
+  if (!confirm("Import the 28 prepared inventory records? Existing records will not be overwritten.")) {
+    return;
+  }
+
+  const button = $("runInventoryImportBtn");
+  button.disabled = true;
+  button.textContent = "Importing…";
+
+  try {
+    const existingKeys = new Set(items.map(item => item.importKey).filter(Boolean));
+    const toImport = inventoryImportRecords.filter(record => !existingKeys.has(record.importKey));
+
+    if (!toImport.length) {
+      $("importProgress").className = "message ok";
+      $("importProgress").textContent = "All 28 records were already imported. No duplicates were created.";
+      return;
+    }
+
+    let nextSequence = items.reduce((highest, item) => {
+      const match = String(item.inventoryNumber || "").match(/AE-(\d+)/i);
+      return match ? Math.max(highest, Number(match[1])) : highest;
+    }, 0) + 1;
+
+    let imported = 0;
+
+    for (const record of toImport) {
+      const data = {
+        ...record,
+        inventoryNumber: `AE-${String(nextSequence).padStart(4, "0")}`,
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser?.email || "",
+        updatedAt: serverTimestamp(),
+        updatedBy: auth.currentUser?.email || ""
+      };
+
+      delete data.sourceRow;
+      await addDoc(itemCollection(), data);
+      nextSequence += 1;
+      imported += 1;
+
+      $("importProgress").className = "message";
+      $("importProgress").textContent = `Imported ${imported} of ${toImport.length} items…`;
+    }
+
+    $("importProgress").className = "message ok";
+    $("importProgress").textContent =
+      `Import complete: ${imported} items added. ${inventoryImportRecords.length - imported} existing import records were skipped.`;
+  } catch (error) {
+    console.error(error);
+    $("importProgress").className = "message error";
+    $("importProgress").textContent = friendlyError(error);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Import 28 Items";
+  }
+}
+
 function startItemSync() {
   if (unsubscribeItems) unsubscribeItems();
   setSyncState("syncing", "Syncing…");
@@ -1849,6 +1936,12 @@ onAuthStateChanged(auth, async user => {
     setSyncState("syncing", "Connecting…");
     startItemSync();
     startTeamManagement();
+
+    if ($("importTabButton")) {
+      $("importTabButton").hidden = !isTeamAdmin(currentMember);
+    }
+
+    renderImportPreview();
     setForm(null);
   } catch (error) {
     $("authScreen").hidden = false;

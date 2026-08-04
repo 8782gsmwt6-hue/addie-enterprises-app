@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.4.1" />
+  <link rel="stylesheet" href="styles.css?v=4.4.2" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -87,6 +87,7 @@
         <button class="tab" data-tab="deal">Deal Analyzer</button>
         <button class="tab" data-tab="items">Items</button>
         <button class="tab" data-tab="add">Add / Edit Item</button>
+        <button class="tab" id="importTabButton" data-tab="import" hidden>Import Inventory</button>
         <button class="tab" data-tab="settings">Settings</button>
       </nav>
 
@@ -525,7 +526,44 @@
         </form>
       </section>
 
-      <section id="settings" class="panel">
+      
+      <section id="import" class="panel">
+        <div class="card">
+          <div class="form-heading">
+            <div>
+              <h2>Import Inventory</h2>
+              <p>One-time import of 28 items from Addie’s existing inventory document.</p>
+            </div>
+          </div>
+
+          <div class="import-summary-grid">
+            <div class="metric"><div class="label">Prepared Items</div><div class="value">28</div><div class="sub">Inventory records</div></div>
+            <div class="metric"><div class="label">Duplicate Protection</div><div class="value">On</div><div class="sub">Previously imported rows are skipped</div></div>
+            <div class="metric"><div class="label">Existing Inventory</div><div class="value">Safe</div><div class="sub">Nothing is overwritten</div></div>
+          </div>
+
+          <div class="import-warning">
+            <strong>Before importing:</strong> Review the three rows with two historical prices. The first number is used as Listing Price and the second is preserved in Notes.
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Brand</th><th>Model</th><th>Type</th><th>Color / Material</th><th>Purchase</th><th>Listing</th><th>Status</th></tr>
+              </thead>
+              <tbody id="importPreviewRows"></tbody>
+            </table>
+          </div>
+
+          <div class="import-actions">
+            <button type="button" class="primary" id="runInventoryImportBtn">Import 28 Items</button>
+          </div>
+
+          <div id="importProgress" class="message" aria-live="polite"></div>
+        </div>
+      </section>
+
+<section id="settings" class="panel">
         <div class="card">
           <div class="section-title">Device Setup</div>
           <h3>Samsung / Android</h3>
@@ -594,7 +632,7 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.4.1"></script>
+<script type="module" src="app.js?v=4.4.2"></script>
 
   <div id="infoModal" class="info-modal" hidden>
     <div class="info-modal-backdrop" data-close-info="true"></div>
