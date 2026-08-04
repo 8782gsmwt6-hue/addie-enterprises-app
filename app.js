@@ -1131,6 +1131,31 @@ function openItemFromDashboard(itemId) {
     requestAnimationFrame(findAndScroll);
   });
 }
+
+function compareBrandModelInventory(a, b) {
+  const brandCompare = String(a.brand || "").localeCompare(
+    String(b.brand || ""),
+    undefined,
+    { sensitivity: "base", numeric: true }
+  );
+
+  if (brandCompare !== 0) return brandCompare;
+
+  const modelCompare = String(a.itemName || "").localeCompare(
+    String(b.itemName || ""),
+    undefined,
+    { sensitivity: "base", numeric: true }
+  );
+
+  if (modelCompare !== 0) return modelCompare;
+
+  return String(a.inventoryNumber || "").localeCompare(
+    String(b.inventoryNumber || ""),
+    undefined,
+    { sensitivity: "base", numeric: true }
+  );
+}
+
 function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
@@ -1140,7 +1165,7 @@ function renderItems() {
   });
 
 
-  const sortMode = $("sortFilter")?.value || "updated-desc";
+  const sortMode = $("sortFilter")?.value || "brand-asc";
 
   filtered.sort((a, b) => {
     if (Boolean(b.favorite) !== Boolean(a.favorite)) {
@@ -1151,6 +1176,8 @@ function renderItems() {
     const bCalc = calculation(b);
 
     switch (sortMode) {
+      case "brand-asc":
+        return compareBrandModelInventory(a, b);
       case "purchase-desc":
         return String(b.purchaseDate || "").localeCompare(String(a.purchaseDate || ""));
       case "purchase-asc":
@@ -2439,6 +2466,10 @@ document.querySelectorAll(".tab").forEach(b => b.onclick = () => showTab(b.datas
 
 window.addEventListener("online", () => $("syncBadge").textContent = "Reconnecting…");
 window.addEventListener("offline", () => $("syncBadge").textContent = "Offline");
+
+if ($("sortFilter")) {
+  $("sortFilter").value = "brand-asc";
+}
 
 populatePlatforms();
 populateDealAnalyzerFields();

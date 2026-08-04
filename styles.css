@@ -1051,3 +1051,9 @@ input[type="number"]{
 #customCategoryWrap[hidden]{
   display:none !important;
 }
+
+
+/* v4.4.7 alphabetical inventory default */
+#sortFilter{
+  min-width:190px;
+}
