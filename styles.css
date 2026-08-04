@@ -1045,3 +1045,9 @@ input[type="number"]{
     background:transparent;
   }
 }
+
+
+/* v4.4.6 imported-item edit compatibility */
+#customCategoryWrap[hidden]{
+  display:none !important;
+}

@@ -562,6 +562,21 @@ function addDealToInventory() {
   const deal = readDealForm();
   setForm(null);
 
+
+  const categorySelect = $("category");
+  const knownLegacyCategories = categorySelect
+    ? Array.from(categorySelect.options).map(option => option.value)
+    : [];
+
+  if (
+    isEditing &&
+    values.category &&
+    !knownLegacyCategories.includes(values.category)
+  ) {
+    values.customCategory = values.category;
+    values.category = "Other";
+  }
+
   const brandSelect = $("brand");
   const knownBrands = brandSelect
     ? Array.from(brandSelect.options).map(option => option.value)
@@ -1351,7 +1366,7 @@ function previewProfit() {
     </div>`;
 }
 function readForm() {
-  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","size","itemType","customItemType","color","customColor","materialPattern","customMaterialPattern","status","condition","accessories","authentication",
+  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","size","itemType","customItemType","category","customCategory","color","customColor","materialPattern","customMaterialPattern","colorMaterial","status","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","customExpectedPlatform","expectedSellingPrice",
     "recommendedMaxBuy","marketConfidence","listingDate","listingPrice","salePrice","saleDate","actualSalePlatform","customActualSalePlatform",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
@@ -1376,10 +1391,13 @@ function setForm(item = null) {
     size: "",
     itemType: "Handbag",
     customItemType: "",
+    category: "Handbag",
+    customCategory: "",
     color: "",
     customColor: "",
     materialPattern: "",
     customMaterialPattern: "",
+    colorMaterial: "",
     status: "Purchased",
     condition: "Excellent",
     accessories: "",
@@ -1416,10 +1434,25 @@ function setForm(item = null) {
       }
     : { ...defaults };
 
-  // Backward compatibility for older inventory records.
+  // Compatibility between imported structured records and the
+  // currently visible Category / Color-Material controls.
   if (isEditing) {
     if (!values.itemType && item.category) {
       values.itemType = item.category;
+    }
+
+    if (!values.category && values.itemType) {
+      values.category = values.itemType;
+    }
+
+    if (
+      !values.colorMaterial &&
+      (values.color || values.materialPattern)
+    ) {
+      values.colorMaterial = [
+        values.color,
+        values.materialPattern
+      ].filter(Boolean).join(" ");
     }
 
     if ((!values.color || !values.materialPattern) && item.colorMaterial) {
@@ -1563,6 +1596,12 @@ function setForm(item = null) {
   );
 
   toggleOtherField(
+    "category",
+    "customCategoryWrap",
+    "customCategory"
+  );
+
+  toggleOtherField(
     "color",
     "customColorWrap",
     "customColor"
@@ -1626,8 +1665,20 @@ async function saveItem(event) {
       data.brand = data.customBrand.trim();
     }
 
-    if (data.itemType === "Other") {
+    // The visible form currently uses Category. Convert it into
+    // the structured itemType field before validation and saving.
+    if (data.category === "Other") {
+      data.itemType = data.customCategory.trim();
+    } else if (data.category) {
+      data.itemType = data.category;
+    } else if (data.itemType === "Other") {
       data.itemType = data.customItemType.trim();
+    }
+
+    // Preserve the visible Color / Material entry while also
+    // keeping structured records compatible.
+    if (data.colorMaterial && !data.materialPattern) {
+      data.materialPattern = data.colorMaterial.trim();
     }
 
     if (data.color === "Other") {
@@ -1657,7 +1708,7 @@ async function saveItem(event) {
     }
 
     if (!data.itemType.trim()) {
-      throw new Error("Please select or enter the item type.");
+      throw new Error("Please select or enter the Category / Type.");
     }
 
     if ($("color")?.value === "Other" && !data.color.trim()) {
@@ -1752,12 +1803,21 @@ async function saveItem(event) {
 
     delete data.customBrand;
     delete data.customItemType;
+    delete data.customCategory;
     delete data.customColor;
     delete data.customMaterialPattern;
     delete data.customExpectedPlatform;
     delete data.customActualSalePlatform;
-    delete data.category;
-    delete data.colorMaterial;
+
+    // Keep these legacy fields temporarily because the visible form
+    // still uses them. itemType and materialPattern remain the
+    // structured source of truth for newer records.
+    data.category = data.itemType;
+    data.colorMaterial = data.colorMaterial || [
+      data.color,
+      data.materialPattern
+    ].filter(Boolean).join(" ");
+
     delete data.listingPlatform;
 
     if (!Array.isArray(data.listingPlatforms)) {
