@@ -10,7 +10,7 @@
   <title>Addie Enterprises Tracker</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css?v=4.4.0" />
+  <link rel="stylesheet" href="styles.css?v=4.4.1" />
 </head>
 <body>
   <div id="authScreen" class="auth-shell">
@@ -135,6 +135,12 @@
             <div>
               <label>Model / Collection</label>
               <input id="dealItemName" placeholder="Neverfull MM, Cassette, wallet..." />
+            </div>
+            <div>
+              <label class="label-with-info">Size
+                <button type="button" class="info-button" data-help="size" aria-label="Information about Size">ⓘ</button>
+              </label>
+              <input id="dealSize" placeholder="MM, 30, BB, 38, 95 cm..." />
             </div>
 
             <div>
@@ -415,6 +421,12 @@
             </div>
             <div><label>Model / Collection *</label><input id="itemName" required placeholder="Neverfull MM Monogram" /></div>
             <div>
+              <label class="label-with-info">Size
+                <button type="button" class="info-button" data-help="size" aria-label="Information about Size">ⓘ</button>
+              </label>
+              <input id="size" placeholder="MM, 30, BB, 38, 95 cm..." />
+            </div>
+            <div>
               <label>Category</label>
               <select id="category">
                 <option>Handbag</option>
@@ -582,7 +594,7 @@
     }
   }
 </script>
-<script type="module" src="app.js?v=4.4.0"></script>
+<script type="module" src="app.js?v=4.4.1"></script>
 
   <div id="infoModal" class="info-modal" hidden>
     <div class="info-modal-backdrop" data-close-info="true"></div>

@@ -929,3 +929,10 @@ input[type="number"]{
   color:#64748b;
   font-size:.78rem;
 }
+
+
+/* v4.4.1 size field */
+#size,
+#dealSize{
+  width:100%;
+}

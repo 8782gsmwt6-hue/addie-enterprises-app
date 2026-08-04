@@ -252,6 +252,17 @@ const helpContent = {
     `
   },
 
+
+  size: {
+    title: "Size",
+    body: `
+      <p><strong>What it means:</strong> The manufacturer's size, model size, measurement, or shoe size.</p>
+      <p><strong>Examples:</strong> Neverfull MM, Speedy 30, Alma BB, Kelly 28, shoe size 38, or belt size 95 cm.</p>
+      <p><strong>Why it matters:</strong> Size often affects resale value, buyer demand, and searchability.</p>
+      <p><strong>Source:</strong> User-entered or imported from the item description.</p>
+    `
+  },
+
   purchasePrice: {
     title: "Purchase Price",
     body: `
@@ -477,6 +488,7 @@ function readDealForm() {
   return {
     brand: brandSelection === "Other" ? customBrand : brandSelection,
     itemName: $("dealItemName")?.value || "",
+    size: $("dealSize")?.value || "",
     condition: $("dealCondition")?.value || "Excellent",
     marketConfidence: $("dealMarketConfidence")?.value || "Medium",
     purchasePrice: $("dealPurchasePrice")?.value || "",
@@ -524,6 +536,7 @@ function renderStandaloneDealAnalyzer() {
 function clearDealAnalyzer() {
   [
     "dealItemName",
+    "dealSize",
     "dealPurchasePrice",
     "dealExpectedSellingPrice",
     "dealCustomBrand"
@@ -562,6 +575,7 @@ function addDealToInventory() {
 
   const mapping = {
     itemName: deal.itemName,
+    size: deal.size,
     condition: deal.condition,
     marketConfidence: deal.marketConfidence,
     purchasePrice: deal.purchasePrice,
@@ -883,7 +897,7 @@ function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
   const filtered = items.filter(i => {
-    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.itemType || i.category || ""} ${i.color || ""} ${i.materialPattern || i.colorMaterial || ""} ${i.authentication || ""} ${(Array.isArray(i.listingPlatforms) ? i.listingPlatforms.join(" ") : (i.listingPlatform || ""))} ${i.purchaseSource} ${i.notes}`.toLowerCase();
+    const haystack = `${i.inventoryNumber || ""} ${i.brand} ${i.itemName} ${i.size || ""} ${i.itemType || i.category || ""} ${i.color || ""} ${i.materialPattern || i.colorMaterial || ""} ${i.authentication || ""} ${(Array.isArray(i.listingPlatforms) ? i.listingPlatforms.join(" ") : (i.listingPlatform || ""))} ${i.purchaseSource} ${i.notes}`.toLowerCase();
     return (!term || haystack.includes(term)) && (!status || i.status === status);
   });
 
@@ -928,7 +942,9 @@ function renderItems() {
           <strong>${i.favorite ? "⭐ " : ""}${escapeHtml(i.brand)}</strong>
           <span class="inventory-number">${escapeHtml(i.inventoryNumber || "Unnumbered")}</span>
         </div>
-        <span class="muted">${escapeHtml(i.itemName)}</span>
+        <span class="muted">${escapeHtml(
+          [i.itemName, i.size].filter(Boolean).join(" · ")
+        )}</span>
         <span class="muted">${escapeHtml(
           [i.itemType || i.category, i.color, i.materialPattern || i.colorMaterial]
             .filter(Boolean)
@@ -1060,7 +1076,7 @@ function previewProfit() {
 }
 
 function readForm() {
-  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","itemType","customItemType","color","customColor","materialPattern","customMaterialPattern","status","condition","accessories","authentication",
+  const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","size","itemType","customItemType","color","customColor","materialPattern","customMaterialPattern","status","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","customExpectedPlatform","expectedSellingPrice",
     "recommendedMaxBuy","marketConfidence","listingDate","listingPrice","salePrice","saleDate","actualSalePlatform","customActualSalePlatform",
     "actualPlatformFee","shippingCosts","buyerPaidShipping","notes","pricingAnalysis"];
@@ -1082,6 +1098,7 @@ function setForm(item = null) {
     brand: "",
     customBrand: "",
     itemName: "",
+    size: "",
     itemType: "Handbag",
     customItemType: "",
     color: "",
@@ -1953,6 +1970,7 @@ if ($("sortFilter")) $("sortFilter").addEventListener("change", renderItems);
   "dealBrand",
   "dealCustomBrand",
   "dealItemName",
+  "dealSize",
   "dealCondition",
   "dealMarketConfidence",
   "dealPurchasePrice",
