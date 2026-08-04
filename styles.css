@@ -971,3 +971,19 @@ input[type="number"]{
     width:100%;
   }
 }
+
+
+/* v4.4.3 — ROI begins when listed */
+.inventory-value{
+  color:#35536f;
+  font-weight:850;
+}
+
+.inventory-rating{
+  background:#e8eef5;
+  color:#35536f;
+}
+
+.metric .sub{
+  line-height:1.35;
+}

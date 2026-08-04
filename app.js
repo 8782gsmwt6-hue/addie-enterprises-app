@@ -780,8 +780,21 @@ function calculation(i) {
   const buyerShipping = number(i.buyerPaidShipping);
   const saleEntered = number(i.salePrice) > 0;
   const listingEntered = number(i.listingPrice) > 0;
+  const status = normalizedStatus(i.status);
 
-  const revenue = saleEntered ? number(i.salePrice) : (listingEntered ? number(i.listingPrice) : number(i.expectedSellingPrice));
+  // Purchased items are inventory—not projected losses.
+  // Profit and ROI begin only after the item is listed or sold.
+  const isInventoryOnly =
+    !saleEntered &&
+    !listingEntered &&
+    status === "Purchased";
+
+  const revenue = saleEntered
+    ? number(i.salePrice)
+    : listingEntered
+      ? number(i.listingPrice)
+      : number(i.expectedSellingPrice);
+
   const listingPlatforms = Array.isArray(i.listingPlatforms)
     ? i.listingPlatforms
     : i.listingPlatform
@@ -800,19 +813,61 @@ function calculation(i) {
         listingPlatforms[0] ||
         ""
       );
+
+  if (isInventoryOnly) {
+    return {
+      purchase,
+      revenue: 0,
+      fee: 0,
+      netProceeds: 0,
+      profit: null,
+      roi: null,
+      type: "Inventory",
+      basis: "Not listed",
+      saleEntered: false,
+      listingEntered: false,
+      isInventoryOnly: true
+    };
+  }
+
   const fee = saleEntered
     ? number(i.actualPlatformFee)
     : revenue * number(estimatedFeeRates[platform]);
 
-  const netProceeds = revenue + buyerShipping - fee - shippingCosts;
+  const netProceeds =
+    revenue + buyerShipping - fee - shippingCosts;
+
   const profit = netProceeds - purchase;
-  const roi = purchase > 0 ? profit / purchase : 0;
+
+  // A free item has no conventional ROI denominator.
+  // Display 100% when it produces positive profit, otherwise 0%.
+  const roi = purchase > 0
+    ? profit / purchase
+    : profit > 0
+      ? 1
+      : 0;
+
   const type = saleEntered ? "Actual" : "Projected";
-  const basis = saleEntered ? "Sale price" : (listingEntered ? "Listing price" : "Expected price");
+  const basis = saleEntered
+    ? "Sale price"
+    : listingEntered
+      ? "Listing price"
+      : "Expected price";
 
-  return { purchase, revenue, fee, netProceeds, profit, roi, type, basis, saleEntered };
+  return {
+    purchase,
+    revenue,
+    fee,
+    netProceeds,
+    profit,
+    roi,
+    type,
+    basis,
+    saleEntered,
+    listingEntered,
+    isInventoryOnly: false
+  };
 }
-
 function showTab(id) {
   
 document.querySelectorAll(".info-button").forEach(button => {
@@ -855,49 +910,133 @@ document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.da
 }
 
 function renderMetrics() {
-  const sold = items.filter(i => number(i.salePrice) > 0);
-  const unsold = items.filter(i => !sold.includes(i));
-  const invested = items.reduce((s,i) => s + number(i.purchasePrice), 0);
-  const projectedProfit = unsold.reduce((s,i) => s + calculation(i).profit, 0);
-  const actualProfit = sold.reduce((s,i) => s + calculation(i).profit, 0);
+  const sold = items.filter(item => number(item.salePrice) > 0);
+
+  const listed = items.filter(item => {
+    if (sold.includes(item)) return false;
+    const calculationResult = calculation(item);
+    return !calculationResult.isInventoryOnly;
+  });
+
+  const inventoryOnly = items.filter(item =>
+    calculation(item).isInventoryOnly
+  );
+
+  const inventoryCost = inventoryOnly.reduce(
+    (sum, item) => sum + number(item.purchasePrice),
+    0
+  );
+
+  const listedInvestment = listed.reduce(
+    (sum, item) => sum + number(item.purchasePrice),
+    0
+  );
+
+  const soldInvestment = sold.reduce(
+    (sum, item) => sum + number(item.purchasePrice),
+    0
+  );
+
+  const projectedProfit = listed.reduce(
+    (sum, item) => sum + number(calculation(item).profit),
+    0
+  );
+
+  const actualProfit = sold.reduce(
+    (sum, item) => sum + number(calculation(item).profit),
+    0
+  );
+
   const combinedProfit = projectedProfit + actualProfit;
-  const combinedRoi = invested > 0 ? combinedProfit / invested : 0;
-  const heldValues = unsold.map(daysHeld).filter(value => value !== null);
+  const roiInvestment = listedInvestment + soldInvestment;
+
+  const combinedRoi =
+    roiInvestment > 0
+      ? combinedProfit / roiInvestment
+      : 0;
+
+  const heldValues = items
+    .filter(item => !sold.includes(item))
+    .map(daysHeld)
+    .filter(value => value !== null);
+
   const averageDaysHeld = heldValues.length
-    ? Math.round(heldValues.reduce((sum, value) => sum + value, 0) / heldValues.length)
+    ? Math.round(
+        heldValues.reduce((sum, value) => sum + value, 0) /
+        heldValues.length
+      )
     : 0;
-  const favoriteCount = items.filter(item => item.favorite === true).length;
+
+  const favoriteCount =
+    items.filter(item => item.favorite === true).length;
 
   const data = [
     ["Items", items.length, "All tracked inventory"],
+    ["Purchased / Unlisted", inventoryOnly.length, "Held as inventory; no ROI yet"],
+    ["Listed", listed.length, "Included in projected profit and ROI"],
     ["Sold", sold.length, "Actual sale price entered"],
-    ["Inventory Cost", money(unsold.reduce((s,i)=>s+number(i.purchasePrice),0)), "Unsold purchase cost"],
-    ["Projected Profit", money(projectedProfit), "Listing price, or expected price if not listed"],
+    ["Unlisted Inventory Cost", money(inventoryCost), "Purchase cost awaiting listing"],
+    ["Listed Inventory Cost", money(listedInvestment), "Capital included in projected ROI"],
+    ["Projected Profit", money(projectedProfit), "Listed items only"],
     ["Actual Profit", money(actualProfit), "Completed sales"],
-    ["Combined Profit", money(combinedProfit), "Projected + actual"],
-    ["Combined ROI", pct(combinedRoi), "Based on purchase cost"],
+    ["Combined Profit", money(combinedProfit), "Listed projected + sold actual"],
+    ["Combined ROI", pct(combinedRoi), "Excludes purchased items not yet listed"],
     ["Average Days Held", averageDaysHeld, "Unsold inventory"],
     ["Favorites", favoriteCount, "High-priority items"]
   ];
-  $("metrics").innerHTML = data.map(([label,value,sub]) => `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`).join("");
-}
 
+  $("metrics").innerHTML = data
+    .map(
+      ([label, value, sub]) =>
+        `<div class="metric">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+          <div class="sub">${sub}</div>
+        </div>`
+    )
+    .join("");
+}
 function renderDashboardRows() {
-  $("dashboardRows").innerHTML = items.length ? items.map(i => {
-    const c = calculation(i);
-    return `<tr>
-      <td>
-        <strong>${i.favorite ? "⭐ " : ""}${escapeHtml(i.brand)} ${escapeHtml(i.itemName)}</strong>
-        <span class="muted">${escapeHtml(i.inventoryNumber || "")}</span>
-      </td>
-      <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(normalizedStatus(i.status))}</span></td>
-      <td>${c.type}</td><td>${c.basis}: ${money(c.revenue)}</td>
-      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</td>
-      <td>${pct(c.roi)}</td>
-    </tr>`;
-  }).join("") : `<tr><td colspan="6" class="empty">No items yet.</td></tr>`;
-}
+  $("dashboardRows").innerHTML = items.length
+    ? items.map(item => {
+        const result = calculation(item);
 
+        if (result.isInventoryOnly) {
+          return `<tr>
+            <td>
+              <strong>${item.favorite ? "⭐ " : ""}${escapeHtml(item.brand)} ${escapeHtml(item.itemName)}</strong>
+              <span class="muted">${escapeHtml(item.inventoryNumber || "")}</span>
+            </td>
+            <td>
+              <span class="pill">${escapeHtml(normalizedStatus(item.status))}</span>
+            </td>
+            <td>Inventory</td>
+            <td>Purchase cost: ${money(result.purchase)}</td>
+            <td class="inventory-value">${money(result.purchase)} invested</td>
+            <td>—</td>
+          </tr>`;
+        }
+
+        return `<tr>
+          <td>
+            <strong>${item.favorite ? "⭐ " : ""}${escapeHtml(item.brand)} ${escapeHtml(item.itemName)}</strong>
+            <span class="muted">${escapeHtml(item.inventoryNumber || "")}</span>
+          </td>
+          <td>
+            <span class="pill ${item.status === "Sold" ? "sold" : item.status === "Listed" ? "listed" : ""}">
+              ${escapeHtml(normalizedStatus(item.status))}
+            </span>
+          </td>
+          <td>${result.type}</td>
+          <td>${result.basis}: ${money(result.revenue)}</td>
+          <td class="${number(result.profit) >= 0 ? "profit-positive" : "profit-negative"}">
+            ${money(result.profit)}
+          </td>
+          <td>${result.roi === null ? "—" : pct(result.roi)}</td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="6" class="empty">No items yet.</td></tr>`;
+}
 function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
@@ -923,9 +1062,9 @@ function renderItems() {
       case "purchase-asc":
         return String(a.purchaseDate || "").localeCompare(String(b.purchaseDate || ""));
       case "profit-desc":
-        return bCalc.profit - aCalc.profit;
+        return number(bCalc.profit) - number(aCalc.profit);
       case "profit-asc":
-        return aCalc.profit - bCalc.profit;
+        return number(aCalc.profit) - number(bCalc.profit);
       case "brand-asc":
         return String(a.brand || "").localeCompare(String(b.brand || ""));
       case "status-asc":
@@ -965,11 +1104,21 @@ function renderItems() {
           : (i.listingPlatform || "")
       )}</span></td>
       <td>${number(i.salePrice) ? money(i.salePrice) : "—"}<span class="muted">${escapeHtml(i.saleDate || "")}</span></td>
-      <td class="${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}
-        <span class="muted">${c.type}</span>
-        <span class="profit-rating ${rating.className}">${rating.label}</span>
-      </td>
-      <td>${pct(c.roi)}</td>
+      ${
+        c.isInventoryOnly
+          ? `<td class="inventory-value">
+              ${money(c.purchase)}
+              <span class="muted">Inventory invested</span>
+              <span class="profit-rating inventory-rating">Not listed</span>
+            </td>
+            <td>—</td>`
+          : `<td class="${number(c.profit) >= 0 ? "profit-positive" : "profit-negative"}">
+              ${money(c.profit)}
+              <span class="muted">${c.type}</span>
+              <span class="profit-rating ${rating.className}">${rating.label}</span>
+            </td>
+            <td>${c.roi === null ? "—" : pct(c.roi)}</td>`
+      }
       <td><span class="pill ${i.status === "Sold" ? "sold" : i.status === "Listed" ? "listed" : ""}">${escapeHtml(normalizedStatus(i.status))}</span></td>
       <td class="muted">${updated}</td>
       <td><div class="row-actions"><button class="secondary edit-btn" data-id="${i.id}">Edit</button><button class="danger delete-btn" data-id="${i.id}">Delete</button></div></td>
@@ -1070,16 +1219,58 @@ function renderDealAnalyzer() {
 
 function previewProfit() {
   const draft = readForm();
-  const c = calculation(draft);
-  $("profitPreview").classList.toggle("actual", c.saleEntered);
-  $("profitPreview").innerHTML = `
-    <div class="preview-cell"><div class="k">Calculation</div><div class="v">${c.type} Profit</div></div>
-    <div class="preview-cell"><div class="k">Revenue Basis</div><div class="v">${c.basis}: ${money(c.revenue)}</div></div>
-    <div class="preview-cell"><div class="k">${c.saleEntered ? "Actual" : "Estimated"} Fees</div><div class="v">${money(c.fee)}</div></div>
-    <div class="preview-cell"><div class="k">Profit</div><div class="v ${c.profit >= 0 ? "profit-positive" : "profit-negative"}">${money(c.profit)}</div></div>
-    <div class="preview-cell"><div class="k">ROI</div><div class="v">${pct(c.roi)}</div></div>`;
-}
+  const result = calculation(draft);
 
+  $("profitPreview").classList.toggle(
+    "actual",
+    result.saleEntered
+  );
+
+  if (result.isInventoryOnly) {
+    $("profitPreview").innerHTML = `
+      <div class="preview-cell">
+        <div class="k">Current Stage</div>
+        <div class="v">Purchased / Inventory</div>
+      </div>
+      <div class="preview-cell">
+        <div class="k">Inventory Investment</div>
+        <div class="v">${money(result.purchase)}</div>
+      </div>
+      <div class="preview-cell">
+        <div class="k">Profit</div>
+        <div class="v">Not calculated yet</div>
+      </div>
+      <div class="preview-cell">
+        <div class="k">ROI</div>
+        <div class="v">Begins when listed</div>
+      </div>`;
+    return;
+  }
+
+  $("profitPreview").innerHTML = `
+    <div class="preview-cell">
+      <div class="k">Calculation</div>
+      <div class="v">${result.type} Profit</div>
+    </div>
+    <div class="preview-cell">
+      <div class="k">Revenue Basis</div>
+      <div class="v">${result.basis}: ${money(result.revenue)}</div>
+    </div>
+    <div class="preview-cell">
+      <div class="k">${result.saleEntered ? "Actual" : "Estimated"} Fees</div>
+      <div class="v">${money(result.fee)}</div>
+    </div>
+    <div class="preview-cell">
+      <div class="k">Profit</div>
+      <div class="v ${number(result.profit) >= 0 ? "profit-positive" : "profit-negative"}">
+        ${money(result.profit)}
+      </div>
+    </div>
+    <div class="preview-cell">
+      <div class="k">ROI</div>
+      <div class="v">${result.roi === null ? "—" : pct(result.roi)}</div>
+    </div>`;
+}
 function readForm() {
   const fields = ["inventoryNumber","favorite","brand","customBrand","itemName","size","itemType","customItemType","color","customColor","materialPattern","customMaterialPattern","status","condition","accessories","authentication",
     "purchaseDate","purchaseSource","purchasePrice","targetProfit","expectedPlatform","customExpectedPlatform","expectedSellingPrice",
