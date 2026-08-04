@@ -1,0 +1,9 @@
+Confirmed import assumptions
+
+1. Purchase price of $0 means Addie acquired the item for free.
+2. COA means Certificate of Authenticity.
+3. COA marked Y means a Certificate of Authenticity is included.
+4. Blank listing price means the item has not been listed yet.
+5. Items with no listing price and no listing platform are imported with status Purchased.
+6. Items with a listing price or listing platform are imported with status Listed.
+7. Items with a sale price are imported with status Sold.
