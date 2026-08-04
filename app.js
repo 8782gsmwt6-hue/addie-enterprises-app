@@ -1057,6 +1057,7 @@ function openItemFromDashboard(itemId) {
 
   pendingItemHighlightId = itemId;
 
+  // Clear filters so the selected record cannot be hidden.
   if ($("searchInput")) {
     $("searchInput").value = "";
   }
@@ -1068,27 +1069,53 @@ function openItemFromDashboard(itemId) {
   showTab("items");
   renderItems();
 
-  requestAnimationFrame(() => {
+  let attempts = 0;
+  const maximumAttempts = 20;
+
+  const findAndScroll = () => {
+    attempts += 1;
+
     const target = document.querySelector(
-      `#itemRows tr[data-item-id="${itemId}"]`
+      `#itemRows tr[data-item-id="${CSS.escape(itemId)}"]`
     );
 
-    if (!target) return;
+    if (target) {
+      // Let Safari/Chrome finish displaying the newly activated panel.
+      setTimeout(() => {
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest"
+        });
 
-    target.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    });
+        target.classList.remove("item-row-highlight");
 
-    target.classList.add("item-row-highlight");
+        // Restart the animation even if the same item is tapped twice.
+        void target.offsetWidth;
+        target.classList.add("item-row-highlight");
 
-    setTimeout(() => {
-      target.classList.remove("item-row-highlight");
-      pendingItemHighlightId = null;
-    }, 2400);
+        setTimeout(() => {
+          target.classList.remove("item-row-highlight");
+          pendingItemHighlightId = null;
+        }, 2600);
+      }, 100);
+
+      return;
+    }
+
+    if (attempts < maximumAttempts) {
+      setTimeout(findAndScroll, 75);
+      return;
+    }
+
+    pendingItemHighlightId = null;
+    console.warn("Could not locate selected inventory row:", itemId);
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(findAndScroll);
   });
 }
-
 function renderItems() {
   const term = $("searchInput").value.trim().toLowerCase();
   const status = $("statusFilter").value;
@@ -1132,7 +1159,7 @@ function renderItems() {
     const rating = buyRating(i);
     const held = daysHeld(i);
     const updated = i.updatedAt?.toDate ? i.updatedAt.toDate().toLocaleString() : "Syncing…";
-    return `<tr>
+    return `<tr data-item-id="${i.id}">
       <td>
         <div class="item-title-line">
           <strong>${i.favorite ? "⭐ " : ""}${escapeHtml(i.brand)}</strong>

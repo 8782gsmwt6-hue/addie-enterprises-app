@@ -1023,3 +1023,25 @@ input[type="number"]{
     box-shadow:inset 0 0 0 transparent;
   }
 }
+
+
+/* v4.4.5 reliable dashboard-to-item scrolling */
+#itemRows tr[data-item-id]{
+  scroll-margin-top:130px;
+}
+
+#itemRows tr.item-row-highlight > td{
+  animation:itemCellHighlight 2.6s ease;
+}
+
+@keyframes itemCellHighlight{
+  0%{
+    background:#f2d17d;
+  }
+  65%{
+    background:#fff4cf;
+  }
+  100%{
+    background:transparent;
+  }
+}
